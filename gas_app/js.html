@@ -127,6 +127,7 @@
     buildOperatorSelect();
     restoreOperator();
     buildStaticOptions();
+    applyRequiredBadges();
     setupCombo('supplier');
     setupCombo('delivery');
     setupCodeDialogCombo();
@@ -144,6 +145,17 @@
     buildOperatorSelect();
     restoreOperator();
     buildStaticOptions();
+    applyRequiredBadges();
+  }
+
+  /** 「入力項目」シートの設定に合わせて、必須・任意のバッジを切り替える（data-req の付いたバッジだけ。部門・承認者は常に必須） */
+  function applyRequiredBadges() {
+    const req = APP.init.requiredFields || {};
+    document.querySelectorAll('[data-req]').forEach(function (b) {
+      const on = req[b.getAttribute('data-req')] === true;
+      b.className = on ? 'badge-required' : 'badge-optional';
+      b.textContent = on ? '必須' : '任意';
+    });
   }
 
   function buildOperatorSelect() {
@@ -539,7 +551,9 @@
       quantity: toHalfWidth($('f-quantity').value).trim(),
       unitNote: $('f-unitNote').value,
       reason: $('f-reason').value,
-      deliveryDate: dateToSlash($('f-deliveryDate').value)
+      deliveryDate: dateToSlash($('f-deliveryDate').value),
+      // 保存の後にアップロードする添付の枠（必須の添付の判定に使う）
+      pendingAttachments: [1, 2].filter(function (n) { return !!APP.form.pending[n]; })
     };
   }
 

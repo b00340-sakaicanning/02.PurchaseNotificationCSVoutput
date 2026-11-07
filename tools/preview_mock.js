@@ -193,6 +193,22 @@
     } catch (e) { console.warn('サンプルを足せません: ' + e); }
   }
 
+  // URL のハッシュ（req=キー:1,キー:0）で「入力項目」シートの必須を変える（画面確認用。例: req=modelNo:1,quantity:0）
+  var reqMatch = String(location.hash || '').match(/req=([\w:,]+)/);
+  if (reqMatch) {
+    try {
+      fns.resetExecutionCache_();
+      if (!fns.readAll('FIELDS').length) { fns.menuSetup(); fns.resetExecutionCache_(); }
+      var want = {};
+      reqMatch[1].split(',').forEach(function (kv) { var a = kv.split(':'); want[a[0]] = a[1] === '1'; });
+      fns.readAll('FIELDS').forEach(function (r) {
+        if (Object.prototype.hasOwnProperty.call(want, r.key)) { r.required = want[r.key]; fns.writeRows_('FIELDS', r._row, [r]); }
+      });
+      fns.resetExecutionCache_();
+      saveState();
+    } catch (e) { console.warn('入力項目を変更できません: ' + e); }
+  }
+
   // URL のハッシュ（auth=1）で、指定した操作者を暗証番号 123456 で認証済みにする（画面確認用）
   if (/auth=1/.test(String(location.hash || ''))) {
     try {

@@ -80,7 +80,8 @@ ctx = { operatorId: 'xxx@sakai-canning.co.jp', token: 'uuid または null' }
   suppliers:   [{code, branch, name, kana, abbr}],                        // 表示=TRUE のみ
   deliveries:  [{code, branch, name}],
   roleHolders: { admins:[employeeId...], accountings:[employeeId...] },   // ボタン表示用
-  limits: { attachmentMaxMb, attachmentAllowedExt, quantityDecimals, pinSessionMinutes }
+  limits: { attachmentMaxMb, attachmentAllowedExt, quantityDecimals, pinSessionMinutes, pinLength },
+  requiredFields: { categoryCode:true, modelNo:false, … }               // 「入力項目」シートの必須（03 §3.11）。バッジの切り替えに使う
 }
 ```
 - 一覧の行には、届出データのうち、画面に出す列とボタンの判定に要る列（`requestId, status, version, applicantId, approverId` など）だけを入れる。

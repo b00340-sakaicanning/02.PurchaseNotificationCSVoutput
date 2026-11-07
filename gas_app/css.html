@@ -154,7 +154,8 @@
     transition: border-color 0.2s, box-shadow 0.2s;
     height: 42px; min-height: 42px; max-height: 42px; box-sizing: border-box;
   }
-  .input-with-icon input { padding-left: 2.35rem; }
+  /* .form-group input[type="text"] の padding に負けないよう、.form-group の中でも指定する */
+  .input-with-icon input, .form-group .input-with-icon input { padding-left: 2.35rem; }
   .form-group textarea {
     width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.9rem; color: var(--text-main); background: var(--bg-card); outline: none; resize: vertical; min-height: 84px;

@@ -165,7 +165,8 @@
     transition: border-color 0.2s, box-shadow 0.2s;
     height: 42px; min-height: 42px; max-height: 42px; box-sizing: border-box;
   }
-  .input-with-icon input { padding-left: 2.35rem; }
+  /* .form-group input[type="text"] の padding に負けないよう、.form-group の中でも指定する */
+  .input-with-icon input, .form-group .input-with-icon input { padding-left: 2.35rem; }
   .form-group textarea {
     width: 100%; padding: 0.65rem 0.85rem; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.9rem; color: var(--text-main); background: var(--bg-card); outline: none; resize: vertical; min-height: 84px;
@@ -652,7 +653,7 @@
             <div class="field-error" id="err-deptCode"></div>
           </div>
           <div class="form-group">
-            <label for="f-categoryCode">種別 <span class="badge-required">必須</span></label>
+            <label for="f-categoryCode">種別 <span class="badge-required" data-req="categoryCode">必須</span></label>
             <select id="f-categoryCode"></select>
             <div class="field-error" id="err-categoryCode"></div>
           </div>
@@ -671,7 +672,7 @@
         <h3 class="form-section-title">発注先・納入先</h3>
         <div class="form-grid-2">
           <div class="form-group party-group" id="party-supplier">
-            <label>発注先 <span class="badge-required">必須</span></label>
+            <label>発注先 <span class="badge-required" data-req="supplier">必須</span></label>
             <div class="radio-group">
               <label class="radio-pill"><input type="radio" name="supplierType" value="マスタ" onchange="onPartyTypeChange('supplier')"> マスタから選ぶ</label>
               <label class="radio-pill"><input type="radio" name="supplierType" value="手入力" onchange="onPartyTypeChange('supplier')"> 手入力</label>
@@ -690,7 +691,7 @@
             <div class="field-error" id="err-supplier"></div>
           </div>
           <div class="form-group party-group" id="party-delivery">
-            <label>納入先 <span class="badge-required">必須</span></label>
+            <label>納入先 <span class="badge-required" data-req="delivery">必須</span></label>
             <div class="radio-group">
               <label class="radio-pill"><input type="radio" name="deliveryType" value="マスタ" onchange="onPartyTypeChange('delivery')"> マスタから選ぶ</label>
               <label class="radio-pill"><input type="radio" name="deliveryType" value="手入力" onchange="onPartyTypeChange('delivery')"> 手入力</label>
@@ -713,36 +714,36 @@
         <h3 class="form-section-title">購入する物品</h3>
         <div class="form-grid-2">
           <div class="form-group">
-            <label for="f-itemName">購入物品名 <span class="badge-required">必須</span></label>
+            <label for="f-itemName">購入物品名 <span class="badge-required" data-req="itemName">必須</span></label>
             <input type="text" id="f-itemName" maxlength="100" placeholder="例: ボールペン（黒）">
             <div class="field-error" id="err-itemName"></div>
           </div>
           <div class="form-group">
-            <label for="f-modelNo">型番 <span class="badge-optional">任意</span></label>
+            <label for="f-modelNo">型番 <span class="badge-optional" data-req="modelNo">任意</span></label>
             <input type="text" id="f-modelNo" maxlength="100" placeholder="例: SXN-150-07">
             <div class="field-error" id="err-modelNo"></div>
           </div>
         </div>
         <div class="form-grid-3">
           <div class="form-group">
-            <label for="f-quantity">数量 <span class="badge-required">必須</span></label>
+            <label for="f-quantity">数量 <span class="badge-required" data-req="quantity">必須</span></label>
             <input type="text" id="f-quantity" inputmode="decimal" placeholder="例: 10" onblur="normalizeQuantityInput()">
             <div class="field-error" id="err-quantity"></div>
           </div>
           <div class="form-group">
-            <label for="f-unitNote">単位・補足 <span class="badge-optional">任意</span></label>
+            <label for="f-unitNote">単位・補足 <span class="badge-optional" data-req="unitNote">任意</span></label>
             <input type="text" id="f-unitNote" maxlength="20" placeholder="例: 箱、一式">
             <div class="field-error" id="err-unitNote"></div>
           </div>
           <div class="form-group">
-            <label for="f-deliveryDate">納品日 <span class="badge-optional">任意</span></label>
+            <label for="f-deliveryDate">納品日 <span class="badge-optional" data-req="deliveryDate">任意</span></label>
             <input type="date" id="f-deliveryDate">
             <div class="field-hint">未入力なら、CSVの納期は提出日の月末になります</div>
             <div class="field-error" id="err-deliveryDate"></div>
           </div>
         </div>
         <div class="form-group">
-          <label for="f-reason">理由 <span class="badge-required">必須</span></label>
+          <label for="f-reason">理由 <span class="badge-required" data-req="reason">必須</span></label>
           <textarea id="f-reason" rows="3" maxlength="500" placeholder="購入が必要な理由（500文字以内）"></textarea>
           <div class="field-error" id="err-reason"></div>
         </div>
@@ -750,18 +751,20 @@
         <h3 class="form-section-title">添付書類</h3>
         <div class="form-grid-2">
           <div class="form-group attach-group">
-            <label>添付1（見積書など金額がわかるもの） <span class="badge-optional">任意</span></label>
+            <label>添付1（見積書など金額がわかるもの） <span class="badge-optional" data-req="attachment1">任意</span></label>
             <div class="attach-row">
               <label class="btn-secondary btn-sm file-btn">ファイルを選ぶ<input type="file" id="f-att1" onchange="onAttachSelected(1)"></label>
               <div class="attach-current" id="att1-current"></div>
             </div>
+            <div class="field-error" id="err-attachment1"></div>
           </div>
           <div class="form-group attach-group">
-            <label>添付2（納品書） <span class="badge-optional">任意</span></label>
+            <label>添付2（納品書） <span class="badge-optional" data-req="attachment2">任意</span></label>
             <div class="attach-row">
               <label class="btn-secondary btn-sm file-btn">ファイルを選ぶ<input type="file" id="f-att2" onchange="onAttachSelected(2)"></label>
               <div class="attach-current" id="att2-current"></div>
             </div>
+            <div class="field-error" id="err-attachment2"></div>
           </div>
         </div>
         <div class="field-hint" id="attach-hint"></div>
@@ -1749,7 +1752,8 @@ function buildInitData_() {
       quantityDecimals: s.QUANTITY_DECIMALS,
       pinSessionMinutes: s.PIN_SESSION_MINUTES,
       pinLength: s.PIN_LENGTH
-    }
+    },
+    requiredFields: getRequiredFields()
   };
 }
 
@@ -1771,7 +1775,8 @@ const SHEETS = {
   SUPPLIERS: '発注先マスタ',
   DELIVERIES: '納入先マスタ',
   MATERIALS: '資材マスタ',
-  SETTINGS: '設定'
+  SETTINGS: '設定',
+  FIELDS: '入力項目'
 };
 
 /** 列定義 [見出し, キー, 型]。型: T=書式なしテキスト, N=数値, B=TRUE/FALSE（03 データ設計） */
@@ -1841,8 +1846,29 @@ const COLUMNS = {
   ],
   SETTINGS: [
     ['キー', 'key', 'T'], ['値', 'value', 'T'], ['説明', 'description', 'T']
+  ],
+  FIELDS: [
+    ['キー', 'key', 'T'], ['項目', 'label', 'T'], ['必須', 'required', 'B'], ['説明', 'description', 'T']
   ]
 };
+
+/**
+ * 必須・任意を「入力項目」シートで切り替えられる項目 [キー, 項目名, 初期値（必須か）, 説明]（03 §3.11）
+ * 部門・承認者は承認の流れに必要なため、常に必須でここには載せない。
+ */
+const FIELD_REQUIREMENTS = [
+  ['categoryCode', '種別', true, '資材候補の判定に使う'],
+  ['supplier', '発注先', true, '任意にすると、空のとき CSV の発注先コードも空になる'],
+  ['delivery', '納入先', true, '任意にすると、空のとき CSV の納入先コードも空になる'],
+  ['itemName', '購入物品名', true, ''],
+  ['modelNo', '型番', false, ''],
+  ['quantity', '数量', true, '任意にすると、空のとき CSV の数量も空になる'],
+  ['unitNote', '単位・補足', false, ''],
+  ['deliveryDate', '納品日', false, '空なら、CSV の納期は提出日の月末になる'],
+  ['reason', '理由', true, ''],
+  ['attachment1', '添付1（見積書など）', false, '入力完了・承認依頼のときにファイルが必要になる'],
+  ['attachment2', '添付2（納品書）', false, '入力完了・承認依頼のときにファイルが必要になる']
+];
 
 const STATUS = {
   DRAFT: '一時保存',
@@ -1945,6 +1971,26 @@ function parseSettings_(raw) {
 
 function getSetting(key) {
   return getSettings()[key];
+}
+
+/** 入力項目シートの行から {キー: 必須か} を作る（純粋な関数）。行が無い項目は初期値、知らないキーは無視する */
+function parseRequiredFields_(rows) {
+  const out = {};
+  FIELD_REQUIREMENTS.forEach(function (f) { out[f[0]] = f[2]; });
+  (rows || []).forEach(function (r) {
+    const key = String(r.key || '').trim();
+    if (Object.prototype.hasOwnProperty.call(out, key)) out[key] = r.required === true || String(r.required).toUpperCase() === 'TRUE';
+  });
+  return out;
+}
+
+/** 必須にする項目 {キー: true/false}。シートが無いときは初期値（設定と同じく、マスタのキャッシュには入れない） */
+function getRequiredFields() {
+  if (EXEC_.requiredFields) return EXEC_.requiredFields;
+  let rows = [];
+  try { rows = readAll('FIELDS'); } catch (e) { rows = []; }
+  EXEC_.requiredFields = parseRequiredFields_(rows);
+  return EXEC_.requiredFields;
 }
 
 // =====================================================================
@@ -2443,9 +2489,11 @@ function getApproverCandidates_(masters, deptCode, applicantId) {
  * 届出の入力チェック。level は 'FORMAT'（形式のみ）か 'FULL'（必須＋形式）
  * 戻り値 {errors: {キー: メッセージ}, value: 正規化した値}
  */
-function validateRequest(payload, level, masters, applicantId) {
+function validateRequest(payload, level, masters, applicantId, required) {
   payload = payload || {};
   const full = level === 'FULL';
+  if (!required) { try { required = getRequiredFields(); } catch (e) { required = parseRequiredFields_([]); } }
+  const isReq = function (key) { return full && required[key] === true; };
   const errors = {};
   const s = function (v) { return (v === null || v === undefined) ? '' : String(v).trim(); };
   const p = {
@@ -2455,12 +2503,14 @@ function validateRequest(payload, level, masters, applicantId) {
     itemName: s(payload.itemName), modelNo: s(payload.modelNo), quantity: s(payload.quantity), unitNote: s(payload.unitNote),
     reason: s(payload.reason), deliveryDate: s(payload.deliveryDate)
   };
+  // 部門・承認者は常に必須。それ以外は入力項目シートで決める（required）
   const req = function (key, label) { if (full && !p[key]) errors[key] = (label || '') + '必須です'; };
+  const reqIf = function (key) { if (isReq(key) && !p[key]) errors[key] = '必須です'; };
   const max = function (key, n) { if (p[key] && charLength(p[key]) > n) errors[key] = n + '文字以内で入力してください'; };
 
   req('deptCode');
   if (p.deptCode && !masters.departments.some(function (d) { return d.enabled && d.deptCode === p.deptCode; })) errors.deptCode = '部門を選び直してください';
-  req('categoryCode');
+  reqIf('categoryCode');
   if (p.categoryCode && !masters.categories.some(function (c) { return c.enabled && c.categoryCode === p.categoryCode; })) errors.categoryCode = '種別を選び直してください';
 
   req('approverId');
@@ -2475,7 +2525,7 @@ function validateRequest(payload, level, masters, applicantId) {
     const typeKey = kind + 'Type', codeKey = kind + 'Code', branchKey = kind + 'Branch', nameKey = kind + 'Name';
     const list = kind === 'supplier' ? masters.suppliers : masters.deliveries;
     const type = p[typeKey];
-    if (!type) { if (full) errors[typeKey] = '選択してください'; p[codeKey] = ''; p[branchKey] = ''; return; }
+    if (!type) { if (isReq(kind)) errors[typeKey] = '選択してください'; p[codeKey] = ''; p[branchKey] = ''; p[nameKey] = ''; return; }
     if ([PARTY_TYPES.MASTER, PARTY_TYPES.MANUAL, PARTY_TYPES.NONE].indexOf(type) < 0) { errors[typeKey] = '区分が正しくありません'; return; }
     if (type === PARTY_TYPES.MASTER) {
       if (!p[codeKey]) { if (full) errors[codeKey] = 'マスタから選択してください'; p[nameKey] = ''; return; }
@@ -2491,22 +2541,30 @@ function validateRequest(payload, level, masters, applicantId) {
     }
   });
 
-  req('itemName'); max('itemName', LIMITS.itemName);
-  max('modelNo', LIMITS.modelNo);
-  max('unitNote', LIMITS.unitNote);
-  req('reason'); max('reason', LIMITS.reason);
+  reqIf('itemName'); max('itemName', LIMITS.itemName);
+  reqIf('modelNo'); max('modelNo', LIMITS.modelNo);
+  reqIf('unitNote'); max('unitNote', LIMITS.unitNote);
+  reqIf('reason'); max('reason', LIMITS.reason);
 
   if (p.quantity) {
     const q = normalizeQuantity(p.quantity, getQuantityDecimals_());
     if (q.ok) p.quantity = q.value; else errors.quantity = q.message;
-  } else if (full) {
+  } else if (isReq('quantity')) {
     errors.quantity = '必須です';
   }
 
   if (p.deliveryDate) {
     const d = isValidDate(p.deliveryDate);
     if (d) p.deliveryDate = d; else errors.deliveryDate = '正しい日付を入力してください';
+  } else {
+    reqIf('deliveryDate');
   }
+
+  // 添付は payload.attachments = {1: 付いているか, 2: …}（保存の後にアップロードするファイルも含める）
+  const att = payload.attachments || {};
+  [1, 2].forEach(function (n) {
+    if (isReq('attachment' + n) && !att[n]) errors['attachment' + n] = 'ファイルを添付してください';
+  });
   return { errors: errors, value: p };
 }
 
@@ -2598,6 +2656,7 @@ const PAYLOAD_KEYS_ = ['deptCode', 'categoryCode', 'approverId', 'supplierType',
 function requestToPayload_(req) {
   const p = {};
   PAYLOAD_KEYS_.forEach(function (k) { p[k] = req[k]; });
+  p.attachments = { 1: !!req.att1FileId, 2: !!req.att2FileId };
   return p;
 }
 
@@ -2680,6 +2739,9 @@ function saveRequestImpl_(ctx, payload, mode) {
       if (String(payload.approverId || '') !== req.approverId) f.approverId = 'この状態では変更できません';
       if (Object.keys(f).length) throw AppError('VALIDATION', '承認依頼中・承認済の届出では、部門と承認者を変更できません（K-05）', f);
     }
+    // 添付の有無 = すでに付いている添付 ＋ 画面で選び、保存の後にアップロードするファイル
+    const pending = (payload.pendingAttachments || []).map(Number);
+    payload.attachments = { 1: !!req.att1FileId || pending.indexOf(1) >= 0, 2: !!req.att2FileId || pending.indexOf(2) >= 0 };
     const v = validateRequest(payload, checkLevelFor_(action, statusBefore), masters, req.applicantId);
     if (Object.keys(v.errors).length) throw AppError('VALIDATION', '入力内容を確認してください', v.errors);
     applyPayload_(req, v.value, masters);
@@ -3414,6 +3476,9 @@ function deleteAttachmentImpl_(ctx, requestId, version, slot) {
     const role = requireAuthIfNeeded(ctx, 'ATTACH', req, masters);
     const oldId = req['att' + slot + 'FileId'];
     if (!oldId) throw AppError('VALIDATION', '添付がありません');
+    if (getRequiredFields()['attachment' + slot] && checkLevelFor_('EDIT', req.status) === 'FULL') {
+      throw AppError('VALIDATION', '必須の添付は削除できません。差し替えてください', { ['attachment' + slot]: '必須の添付は削除できません' });
+    }
     try { DriveApp.getFileById(oldId).setTrashed(true); } catch (e) { console.warn('添付をゴミ箱へ移せません: ' + e); }
     const name = req['att' + slot + 'FileName'];
     req['att' + slot + 'FileId'] = '';
@@ -3544,6 +3609,17 @@ function menuSetup() {
     if (keys.indexOf(k) < 0) add.push({ key: k, value: DEFAULT_SETTINGS[k][0], description: DEFAULT_SETTINGS[k][1] });
   });
   if (add.length) appendRows_('SETTINGS', add);
+  // 入力項目（必須・任意の切り替え）。足りない項目だけ初期値で追加する
+  const fieldKeys = readAll('FIELDS').map(function (r) { return r.key; });
+  const addFields = FIELD_REQUIREMENTS.filter(function (f) { return fieldKeys.indexOf(f[0]) < 0; })
+    .map(function (f) { return { key: f[0], label: f[1], required: f[2], description: f[3] }; });
+  if (addFields.length) appendRows_('FIELDS', addFields);
+  try {
+    const fs = ss.getSheetByName(SHEETS.FIELDS);
+    const n = fs.getLastRow() - 1;
+    const col = fs.getRange(1, 1, 1, fs.getLastColumn()).getValues()[0].map(String).indexOf('必須') + 1;
+    if (n > 0 && col > 0) fs.getRange(2, col, n, 1).insertCheckboxes(); // 「必須」列をチェックボックスにする
+  } catch (e) { console.warn('入力項目シートのチェックボックスを設定できません: ' + e); }
   // ドライブのフォルダ
   resetExecutionCache_();
   const isDev = String(ss.getName()).indexOf('開発') >= 0;
@@ -3713,6 +3789,9 @@ function testList_() {
     ['TC-IN-11', '指定なしはコードと名称が空', test_validateNone, 'pure'],
     ['TC-IN-12', '単位・補足は20文字まで', test_validateUnitNote, 'pure'],
     ['TC-IN-14', '承認者の候補が0人なら承認依頼できない', test_validateNoApprover, 'pure'],
+    ['TC-IN-15', '入力項目シートの設定で必須が変わる', test_requiredFieldsSwitch, 'pure'],
+    ['TC-IN-16', '発注先を任意にすると区分が空でも通る', test_requiredPartyOptional, 'pure'],
+    ['TC-IN-17', '添付を必須にする', test_requiredAttachment, 'pure'],
     ['TC-MT-01', '購入物品名の完全一致は順位1', test_rank1, 'pure'],
     ['TC-MT-02', '種別・発注先コード・部門の一致は順位2', test_rank2, 'pure'],
     ['TC-MT-04', '資材名の「：」より後ろの略称で発注先が一致', test_rankAbbr, 'pure'],
@@ -3726,6 +3805,7 @@ function testList_() {
     ['TC-DL-03', '同じ日の連番', test_requestIdSequence, 'pure'],
     ['TC-DL-04', '1000件目以降は4桁', test_requestId1000, 'pure'],
     ['TC-CFG-01', '設定の型変換', test_parseSettings, 'pure'],
+    ['TC-CFG-02', '入力項目シートの読み取り', test_parseRequiredFields, 'pure'],
     ['TC-AU-09', '指定する暗証番号の形式チェック', test_validatePin, 'pure'],
     ['TC-MI-01', 'マスタの件数（資材・発注先・社員・部署・種別）', test_gas_masterCounts, 'gas'],
     ['TC-MI-02', '資材コードの先頭の0', test_gas_materialLeadingZeros, 'gas'],
@@ -3733,6 +3813,7 @@ function testList_() {
     ['TC-AU-10', '管理者が番号を指定して設定する', test_gas_adminSpecifyPin, 'gas'],
     ['TC-FLOW', '入力→承認依頼→承認→資材確定→CSV→反映済→承認済に戻す', test_gas_workflow, 'gas'],
     ['TC-DL-05', '古いバージョンでの更新は CONFLICT', test_gas_conflict, 'gas'],
+    ['TC-IN-18', '入力項目シートを変えると保存時の必須と画面のバッジが変わる', test_gas_requiredFieldsSheet, 'gas'],
     ['TC-NT-01', '通知が無効なら送らない', test_gas_notifyDisabled, 'gas']
   ];
 }
@@ -3925,29 +4006,40 @@ function test_csvConfigError() {
 // pure テスト: 入力チェック
 // ---------------------------------------------------------------------
 
+/** 入力チェック（必須の設定は、省略すると初期値。シートの値に左右されないようにする） */
+function vr_(payload, level, masters, applicantId, required) {
+  return validateRequest(payload, level, masters, applicantId, required || parseRequiredFields_([]));
+}
+/** 初期値から一部の項目だけ必須・任意を変えた設定 */
+function requiredWith_(over) {
+  const r = parseRequiredFields_([]);
+  Object.keys(over).forEach(function (k) { r[k] = over[k]; });
+  return r;
+}
+
 function test_validateDraftEmpty() {
-  const v = validateRequest({}, 'FORMAT', testMasters_(), 'u1@example.com');
+  const v = vr_({}, 'FORMAT', testMasters_(), 'u1@example.com');
   assertEq_(Object.keys(v.errors), []);
 }
 function test_validateFullEmpty() {
-  const v = validateRequest({}, 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_({}, 'FULL', testMasters_(), 'u1@example.com');
   ['deptCode', 'categoryCode', 'approverId', 'supplierType', 'deliveryType', 'itemName', 'quantity', 'reason'].forEach(function (k) {
     assertTrue_(!!v.errors[k], k + ' のエラーがありません');
   });
-  const ok = validateRequest(validPayload_(), 'FULL', testMasters_(), 'u1@example.com');
+  const ok = vr_(validPayload_(), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_(ok.errors, {}, '正しい入力');
   assertEq_(ok.value.supplierName, '株式会社ダイナパック', 'マスタの名称が入る');
 }
 function test_validateItemName() {
   const long = new Array(102).join('あ'); // 101文字
-  assertTrue_(!!validateRequest(validPayload_({ itemName: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName);
-  assertTrue_(!validateRequest(validPayload_({ itemName: long.substr(1) }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName, '100文字は通る');
-  assertTrue_(!!validateRequest(validPayload_({ modelNo: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.modelNo, 'TC-IN-13 型番');
+  assertTrue_(!!vr_(validPayload_({ itemName: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName);
+  assertTrue_(!vr_(validPayload_({ itemName: long.substr(1) }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName, '100文字は通る');
+  assertTrue_(!!vr_(validPayload_({ modelNo: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.modelNo, 'TC-IN-13 型番');
 }
 function test_validateReasonSurrogate() {
   const emoji500 = new Array(501).join('😀'); // 500文字（UTF-16では1000）
-  assertTrue_(!validateRequest(validPayload_({ reason: emoji500 }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '絵文字500文字は通る');
-  assertTrue_(!!validateRequest(validPayload_({ reason: emoji500 + 'あ' }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '501文字はエラー');
+  assertTrue_(!vr_(validPayload_({ reason: emoji500 }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '絵文字500文字は通る');
+  assertTrue_(!!vr_(validPayload_({ reason: emoji500 + 'あ' }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '501文字はエラー');
 }
 function test_quantityInvalid() {
   ['0', '-1', 'abc', '1.2345', '0.000'].forEach(function (q) {
@@ -3964,32 +4056,60 @@ function test_invalidDate() {
   assertEq_(isValidDate('2026/02/30'), null);
   assertEq_(isValidDate('2028-02-29'), '2028/02/29');
   assertEq_(isValidDate('2026/13/01'), null);
-  assertTrue_(!!validateRequest(validPayload_({ deliveryDate: '2026/02/30' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.deliveryDate);
+  assertTrue_(!!vr_(validPayload_({ deliveryDate: '2026/02/30' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.deliveryDate);
 }
 function test_validateUnknownSupplier() {
-  assertTrue_(!!validateRequest(validPayload_({ supplierCode: '999999' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.supplierCode);
+  assertTrue_(!!vr_(validPayload_({ supplierCode: '999999' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.supplierCode);
 }
 function test_validateManualEmpty() {
-  const v = validateRequest(validPayload_({ supplierType: '手入力', supplierCode: '', supplierName: '' }), 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_(validPayload_({ supplierType: '手入力', supplierCode: '', supplierName: '' }), 'FULL', testMasters_(), 'u1@example.com');
   assertTrue_(!!v.errors.supplierName);
-  const ok = validateRequest(validPayload_({ supplierType: '手入力', supplierCode: '000315', supplierName: '山田商会' }), 'FULL', testMasters_(), 'u1@example.com');
+  const ok = vr_(validPayload_({ supplierType: '手入力', supplierCode: '000315', supplierName: '山田商会' }), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_([ok.value.supplierCode, ok.value.supplierName], ['', '山田商会'], '手入力はコードを持たない');
 }
 function test_validateNone() {
-  const v = validateRequest(validPayload_({ supplierType: '指定なし', supplierCode: '000315', supplierName: 'x' }), 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_(validPayload_({ supplierType: '指定なし', supplierCode: '000315', supplierName: 'x' }), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_([v.value.supplierCode, v.value.supplierName, Object.keys(v.errors).length], ['', '', 0]);
 }
 function test_validateUnitNote() {
-  assertTrue_(!!validateRequest(validPayload_({ unitNote: new Array(22).join('a') }), 'FORMAT', testMasters_(), 'u1@example.com').errors.unitNote);
+  assertTrue_(!!vr_(validPayload_({ unitNote: new Array(22).join('a') }), 'FORMAT', testMasters_(), 'u1@example.com').errors.unitNote);
 }
 function test_validateNoApprover() {
   const m = testMasters_();
   // 品質保証課の承認者は u6 だけ。u6 が入力者なら候補は0人
-  const v = validateRequest(validPayload_({ deptCode: '30', approverId: '' }), 'FULL', m, 'u6@example.com');
+  const v = vr_(validPayload_({ deptCode: '30', approverId: '' }), 'FULL', m, 'u6@example.com');
   assertTrue_(/登録されていません/.test(v.errors.approverId || ''), v.errors.approverId);
-  const self = validateRequest(validPayload_({ deptCode: '30', approverId: 'u6@example.com' }), 'FULL', m, 'u6@example.com');
+  const self = vr_(validPayload_({ deptCode: '30', approverId: 'u6@example.com' }), 'FULL', m, 'u6@example.com');
   assertTrue_(!!self.errors.approverId, '自分を承認者にできない');
   assertEq_(getApproverCandidates_(m, '23', 'u1@example.com').map(function (c) { return c.employeeId; }), ['u2@example.com', 'u3@example.com'], '優先順');
+}
+
+function test_requiredFieldsSwitch() {
+  const m = testMasters_();
+  const r = requiredWith_({ modelNo: true, quantity: false, reason: false });
+  const v = vr_(validPayload_({ modelNo: '', quantity: '', reason: '' }), 'FULL', m, 'u1@example.com', r);
+  assertTrue_(!!v.errors.modelNo, '型番を必須にしたのにエラーになりません');
+  assertTrue_(!v.errors.quantity && !v.errors.reason, '任意にした数量・理由がエラーになっています: ' + JSON.stringify(v.errors));
+  assertTrue_(!!vr_(validPayload_({ quantity: '0' }), 'FULL', m, 'u1@example.com', r).errors.quantity, '任意でも形式は確かめる');
+  assertEq_(Object.keys(vr_(validPayload_({ modelNo: '' }), 'FORMAT', m, 'u1@example.com', r).errors), [], '一時保存では必須を見ない');
+  const always = vr_(validPayload_({ deptCode: '', approverId: '' }), 'FULL', m, 'u1@example.com', requiredWith_({}));
+  assertTrue_(!!always.errors.deptCode && !!always.errors.approverId, '部門・承認者は常に必須');
+}
+function test_requiredPartyOptional() {
+  const m = testMasters_();
+  const r = requiredWith_({ supplier: false });
+  const v = vr_(validPayload_({ supplierType: '', supplierCode: '000315' }), 'FULL', m, 'u1@example.com', r);
+  assertEq_([v.errors.supplierType, v.value.supplierCode], [undefined, ''], '区分が空なら通り、コードは空にする');
+  assertTrue_(!!vr_(validPayload_({ supplierType: 'マスタ', supplierCode: '' }), 'FULL', m, 'u1@example.com', r).errors.supplierCode, 'マスタを選んだらコードが要る');
+  assertTrue_(!!vr_(validPayload_({ supplierType: '' }), 'FULL', m, 'u1@example.com').errors.supplierType, '初期値では必須');
+}
+function test_requiredAttachment() {
+  const m = testMasters_();
+  const r = requiredWith_({ attachment1: true });
+  assertTrue_(!!vr_(validPayload_(), 'FULL', m, 'u1@example.com', r).errors.attachment1, '添付が無ければエラー');
+  assertTrue_(!vr_(validPayload_({ attachments: { 1: true } }), 'FULL', m, 'u1@example.com', r).errors.attachment1, '添付があれば通る');
+  assertTrue_(!vr_(validPayload_(), 'FULL', m, 'u1@example.com').errors.attachment1, '初期値では任意');
+  assertTrue_(!vr_(validPayload_(), 'FORMAT', m, 'u1@example.com', r).errors.attachment1, '一時保存では見ない');
 }
 
 // ---------------------------------------------------------------------
@@ -4111,6 +4231,17 @@ function test_parseSettings() {
   assertEq_([s.PIN_SESSION_MINUTES, s.CSV_HEADER, s.CSV_DELIMITER], [45, false, '\t']);
   assertEq_(s.STATUS_COLORS['承認済'].bg, '#d1fae5', '壊れたJSONは既定値');
   assertEq_(s.QUANTITY_DECIMALS, 3);
+}
+function test_parseRequiredFields() {
+  const d = parseRequiredFields_([]);
+  assertEq_([d.itemName, d.quantity, d.modelNo, d.attachment1], [true, true, false, false], '行が無ければ初期値');
+  const r = parseRequiredFields_([
+    { key: 'modelNo', label: '型番（名前を変えても可）', required: true },
+    { key: 'quantity', required: 'FALSE' },
+    { key: 'deptCode', required: false },
+    { key: 'unknown', required: true }
+  ]);
+  assertEq_([r.modelNo, r.quantity, r.itemName, r.deptCode, r.unknown], [true, false, true, undefined, undefined], 'キーで照合し、知らないキーは無視');
 }
 function test_validatePin() {
   assertEq_(validatePin_('482913', 6).ok, true, '6桁の数字');
@@ -4339,6 +4470,37 @@ function test_gas_conflict() {
   }
 }
 
+function test_gas_requiredFieldsSheet() {
+  requireGas_();
+  const a = testActors_();
+  const rows = readAll('FIELDS');
+  const row = rows.filter(function (r) { return r.key === 'modelNo'; })[0];
+  if (!row) throw skip_('入力項目シートが無いか、型番の行がありません（初期セットアップを再実行してください）');
+  const original = row.required;
+  const ctxU = { operatorId: a.applicant, token: null };
+  try {
+    row.required = true;
+    writeRows_('FIELDS', row._row, [row]);
+    resetExecutionCache_();
+    assertEq_(buildInitData_().requiredFields.modelNo, true, '画面へ渡す設定');
+    const supplier = a.masters.suppliers.filter(function (x) { return x.visible; })[0];
+    const payload = {
+      deptCode: a.deptCode, categoryCode: a.categoryCode, approverId: a.approver,
+      supplierType: supplier ? 'マスタ' : '手入力', supplierCode: supplier ? supplier.code : '', supplierBranch: supplier ? supplier.branch : '', supplierName: supplier ? '' : 'テスト商店',
+      deliveryType: '手入力', deliveryName: 'テスト倉庫', itemName: '【テスト】必須の切り替え', modelNo: '', quantity: '1', unitNote: '', reason: '自動テスト', deliveryDate: ''
+    };
+    const res = saveRequest(ctxU, payload, 'COMPLETE');
+    expectError_(res, 'VALIDATION', '型番が空');
+    assertTrue_(!!res.error.fields.modelNo, '型番のエラーがありません');
+    return '型番を必須にすると、空のまま入力完了にできないことを確認';
+  } finally {
+    row.required = original;
+    writeRows_('FIELDS', row._row, [row]);
+    resetExecutionCache_();
+    cleanupTestRequests_();
+  }
+}
+
 function test_gas_notifyDisabled() {
   requireGas_();
   if (getSetting('NOTIFY_ENABLED')) throw skip_('NOTIFY_ENABLED が TRUE です');
@@ -4496,7 +4658,7 @@ function seedSampleRequests_(adminId, accountingId) {
   return 'サンプル届出: ' + made.length + '件（' + made.join('、') + '）。入力者: ' + applicant.name + ' / 承認者: ' + employeeName_(masters, appr.approverId);
 }
 
-  return { fakes: __fakes, fns: { doGet: doGet, include: include, handle_: handle_, getInitData: getInitData, authenticate: authenticate, logout: logout, getRequestList: getRequestList, getRequestDetail: getRequestDetail, getApproverCandidates: getApproverCandidates, searchSuppliers: searchSuppliers, saveRequest: saveRequest, changeStatus: changeStatus, markReflected: markReflected, fillCodes: fillCodes, getMaterialCandidates: getMaterialCandidates, recalcMaterialCandidates: recalcMaterialCandidates, searchMaterials: searchMaterials, fixMaterial: fixMaterial, exportCsv: exportCsv, uploadAttachment: uploadAttachment, deleteAttachment: deleteAttachment, getAttachment: getAttachment, adminPing: adminPing, adminImportMasters: adminImportMasters, adminIssuePin: adminIssuePin, adminGetSettings: adminGetSettings, buildInitData_: buildInitData_, getSettings: getSettings, parseSettings_: parseSettings_, getSetting: getSetting, resetExecutionCache_: resetExecutionCache_, AppError: AppError, formatDate: formatDate, nowString: nowString, todayString: todayString, toHalfWidth: toHalfWidth, charLength: charLength, toBool_: toBool_, toStr_: toStr_, stripSpaces_: stripSpaces_, bySortOrder_: bySortOrder_, addMinutes_: addMinutes_, parseDateTime_: parseDateTime_, chunkCachePut: chunkCachePut, chunkCacheGet: chunkCacheGet, chunkCacheRemove: chunkCacheRemove, getSpreadsheet_: getSpreadsheet_, getSheet: getSheet, headerIndex_: headerIndex_, convertIn_: convertIn_, convertOut_: convertOut_, formatOf_: formatOf_, readAll: readAll, writeRows_: writeRows_, appendRows_: appendRows_, replaceAll_: replaceAll_, withLock: withLock, findRequest_: findRequest_, findRowIndex: findRowIndex, getRequest: getRequest, insertRequest: insertRequest, updateRequest: updateRequest, appendLog: appendLog, computeNextRequestId_: computeNextRequestId_, nextRequestId: nextRequestId, getMasters: getMasters, clearMasterCache: clearMasterCache, findEmployee_: findEmployee_, employeeName_: employeeName_, hashPin_: hashPin_, generatePin_: generatePin_, validatePin_: validatePin_, issuePin: issuePin, createSession_: createSession_, authenticateImpl_: authenticateImpl_, verifyToken: verifyToken, logoutImpl_: logoutImpl_, resolveRoles: resolveRoles, requireOperator_: requireOperator_, requireAuthIfNeeded: requireAuthIfNeeded, requirePrivileged_: requirePrivileged_, normalizeQuantity: normalizeQuantity, isValidDate: isValidDate, getApproverCandidates_: getApproverCandidates_, validateRequest: validateRequest, getQuantityDecimals_: getQuantityDecimals_, canPerform: canPerform, nextStatus: nextStatus, checkLevelFor_: checkLevelFor_, blankRequest_: blankRequest_, requestToPayload_: requestToPayload_, applyPayload_: applyPayload_, loadRequestForUpdate_: loadRequestForUpdate_, applyTimestamps_: applyTimestamps_, diffKeys_: diffKeys_, commitRequest_: commitRequest_, saveRequestImpl_: saveRequestImpl_, changeStatusImpl_: changeStatusImpl_, markReflectedImpl_: markReflectedImpl_, fillCodesImpl_: fillCodesImpl_, searchSuppliersImpl_: searchSuppliersImpl_, normalizeSearch_: normalizeSearch_, listRow_: listRow_, getRequestListImpl_: getRequestListImpl_, getRequestDetailImpl_: getRequestDetailImpl_, normalizeName: normalizeName, supplierPartOf: supplierPartOf, normalizeCompanyName_: normalizeCompanyName_, supplierMatch: supplierMatch, rankMaterials: rankMaterials, getMaterials_: getMaterials_, applyCandidates_: applyCandidates_, getMaterialCandidatesImpl_: getMaterialCandidatesImpl_, recalcMaterialCandidatesImpl_: recalcMaterialCandidatesImpl_, searchMaterialsImpl_: searchMaterialsImpl_, fixMaterialImpl_: fixMaterialImpl_, endOfMonth: endOfMonth, formatYmd_: formatYmd_, calcDueDate: calcDueDate, escapeCsvValue: escapeCsvValue, csvColumns_: csvColumns_, csvValueFor_: csvValueFor_, buildCsvText: buildCsvText, buildFileName: buildFileName, exportCsvImpl_: exportCsvImpl_, findImportFile_: findImportFile_, readCsv_: readCsv_, csvToObjects_: csvToObjects_, importMaterials_: importMaterials_, rebuildDepartmentsAndCategories_: rebuildDepartmentsAndCategories_, importSuppliers_: importSuppliers_, importEmployees_: importEmployees_, importMasters: importMasters, getOrCreateRequestFolder_: getOrCreateRequestFolder_, checkAttachment_: checkAttachment_, uploadAttachmentImpl_: uploadAttachmentImpl_, deleteAttachmentImpl_: deleteAttachmentImpl_, getAttachmentImpl_: getAttachmentImpl_, notify: notify, notifyRecipients_: notifyRecipients_, sendNotification_: sendNotification_, onOpen: onOpen, alert_: alert_, ensureSheet_: ensureSheet_, getOrCreateFolder_: getOrCreateFolder_, menuSetup: menuSetup, runImportMenu_: runImportMenu_, menuImportAll: menuImportAll, menuImportMaterials: menuImportMaterials, menuImportSuppliers: menuImportSuppliers, menuImportEmployees: menuImportEmployees, menuRebuildDeptCategory: menuRebuildDeptCategory, menuIssuePin: menuIssuePin, menuClearCache: menuClearCache, menuInstallBackupTrigger: menuInstallBackupTrigger, runMonthlyBackup: runMonthlyBackup, assertEq_: assertEq_, assertTrue_: assertTrue_, assertThrows_: assertThrows_, testList_: testList_, runAllTests: runAllTests, menuRunAllTests: menuRunAllTests, skip_: skip_, testSettings_: testSettings_, testMasters_: testMasters_, testMaterials_: testMaterials_, testRequest_: testRequest_, validPayload_: validPayload_, test_endOfMonthBasic: test_endOfMonthBasic, test_endOfMonthLeap: test_endOfMonthLeap, test_endOfMonthLastDay: test_endOfMonthLastDay, test_dueDateWithDelivery: test_dueDateWithDelivery, test_csvDefaultColumns: test_csvDefaultColumns, test_csvLineEnding: test_csvLineEnding, test_csvLeadingZeros: test_csvLeadingZeros, test_csvBlankSupplier: test_csvBlankSupplier, test_csvUnfixedMaterial: test_csvUnfixedMaterial, test_csvEscape: test_csvEscape, test_csvSettingsChange: test_csvSettingsChange, test_csvConfigError: test_csvConfigError, test_validateDraftEmpty: test_validateDraftEmpty, test_validateFullEmpty: test_validateFullEmpty, test_validateItemName: test_validateItemName, test_validateReasonSurrogate: test_validateReasonSurrogate, test_quantityInvalid: test_quantityInvalid, test_quantityFullWidth: test_quantityFullWidth, test_quantityLeadingZero: test_quantityLeadingZero, test_invalidDate: test_invalidDate, test_validateUnknownSupplier: test_validateUnknownSupplier, test_validateManualEmpty: test_validateManualEmpty, test_validateNone: test_validateNone, test_validateUnitNote: test_validateUnitNote, test_validateNoApprover: test_validateNoApprover, rank_: rank_, test_rank1: test_rank1, test_rank2: test_rank2, test_rankAbbr: test_rankAbbr, test_rank3: test_rank3, test_rank4: test_rank4, test_rankInvalid: test_rankInvalid, test_rankManualNone: test_rankManualNone, test_permissionMatrix: test_permissionMatrix, test_selfApproval: test_selfApproval, test_transitions: test_transitions, test_requestIdSequence: test_requestIdSequence, test_requestId1000: test_requestId1000, test_parseSettings: test_parseSettings, test_validatePin: test_validatePin, requireGas_: requireGas_, test_gas_masterCounts: test_gas_masterCounts, test_gas_materialLeadingZeros: test_gas_materialLeadingZeros, testActors_: testActors_, markTest_: markTest_, cleanupTestRequests_: cleanupTestRequests_, call_: call_, expectError_: expectError_, test_gas_pinFlow: test_gas_pinFlow, test_gas_adminSpecifyPin: test_gas_adminSpecifyPin, test_gas_workflow: test_gas_workflow, test_gas_conflict: test_gas_conflict, test_gas_notifyDisabled: test_gas_notifyDisabled, menuSeedDevData: menuSeedDevData, seedDevData: seedDevData, seedSampleRequests_: seedSampleRequests_ } };
+  return { fakes: __fakes, fns: { doGet: doGet, include: include, handle_: handle_, getInitData: getInitData, authenticate: authenticate, logout: logout, getRequestList: getRequestList, getRequestDetail: getRequestDetail, getApproverCandidates: getApproverCandidates, searchSuppliers: searchSuppliers, saveRequest: saveRequest, changeStatus: changeStatus, markReflected: markReflected, fillCodes: fillCodes, getMaterialCandidates: getMaterialCandidates, recalcMaterialCandidates: recalcMaterialCandidates, searchMaterials: searchMaterials, fixMaterial: fixMaterial, exportCsv: exportCsv, uploadAttachment: uploadAttachment, deleteAttachment: deleteAttachment, getAttachment: getAttachment, adminPing: adminPing, adminImportMasters: adminImportMasters, adminIssuePin: adminIssuePin, adminGetSettings: adminGetSettings, buildInitData_: buildInitData_, getSettings: getSettings, parseSettings_: parseSettings_, getSetting: getSetting, parseRequiredFields_: parseRequiredFields_, getRequiredFields: getRequiredFields, resetExecutionCache_: resetExecutionCache_, AppError: AppError, formatDate: formatDate, nowString: nowString, todayString: todayString, toHalfWidth: toHalfWidth, charLength: charLength, toBool_: toBool_, toStr_: toStr_, stripSpaces_: stripSpaces_, bySortOrder_: bySortOrder_, addMinutes_: addMinutes_, parseDateTime_: parseDateTime_, chunkCachePut: chunkCachePut, chunkCacheGet: chunkCacheGet, chunkCacheRemove: chunkCacheRemove, getSpreadsheet_: getSpreadsheet_, getSheet: getSheet, headerIndex_: headerIndex_, convertIn_: convertIn_, convertOut_: convertOut_, formatOf_: formatOf_, readAll: readAll, writeRows_: writeRows_, appendRows_: appendRows_, replaceAll_: replaceAll_, withLock: withLock, findRequest_: findRequest_, findRowIndex: findRowIndex, getRequest: getRequest, insertRequest: insertRequest, updateRequest: updateRequest, appendLog: appendLog, computeNextRequestId_: computeNextRequestId_, nextRequestId: nextRequestId, getMasters: getMasters, clearMasterCache: clearMasterCache, findEmployee_: findEmployee_, employeeName_: employeeName_, hashPin_: hashPin_, generatePin_: generatePin_, validatePin_: validatePin_, issuePin: issuePin, createSession_: createSession_, authenticateImpl_: authenticateImpl_, verifyToken: verifyToken, logoutImpl_: logoutImpl_, resolveRoles: resolveRoles, requireOperator_: requireOperator_, requireAuthIfNeeded: requireAuthIfNeeded, requirePrivileged_: requirePrivileged_, normalizeQuantity: normalizeQuantity, isValidDate: isValidDate, getApproverCandidates_: getApproverCandidates_, validateRequest: validateRequest, getQuantityDecimals_: getQuantityDecimals_, canPerform: canPerform, nextStatus: nextStatus, checkLevelFor_: checkLevelFor_, blankRequest_: blankRequest_, requestToPayload_: requestToPayload_, applyPayload_: applyPayload_, loadRequestForUpdate_: loadRequestForUpdate_, applyTimestamps_: applyTimestamps_, diffKeys_: diffKeys_, commitRequest_: commitRequest_, saveRequestImpl_: saveRequestImpl_, changeStatusImpl_: changeStatusImpl_, markReflectedImpl_: markReflectedImpl_, fillCodesImpl_: fillCodesImpl_, searchSuppliersImpl_: searchSuppliersImpl_, normalizeSearch_: normalizeSearch_, listRow_: listRow_, getRequestListImpl_: getRequestListImpl_, getRequestDetailImpl_: getRequestDetailImpl_, normalizeName: normalizeName, supplierPartOf: supplierPartOf, normalizeCompanyName_: normalizeCompanyName_, supplierMatch: supplierMatch, rankMaterials: rankMaterials, getMaterials_: getMaterials_, applyCandidates_: applyCandidates_, getMaterialCandidatesImpl_: getMaterialCandidatesImpl_, recalcMaterialCandidatesImpl_: recalcMaterialCandidatesImpl_, searchMaterialsImpl_: searchMaterialsImpl_, fixMaterialImpl_: fixMaterialImpl_, endOfMonth: endOfMonth, formatYmd_: formatYmd_, calcDueDate: calcDueDate, escapeCsvValue: escapeCsvValue, csvColumns_: csvColumns_, csvValueFor_: csvValueFor_, buildCsvText: buildCsvText, buildFileName: buildFileName, exportCsvImpl_: exportCsvImpl_, findImportFile_: findImportFile_, readCsv_: readCsv_, csvToObjects_: csvToObjects_, importMaterials_: importMaterials_, rebuildDepartmentsAndCategories_: rebuildDepartmentsAndCategories_, importSuppliers_: importSuppliers_, importEmployees_: importEmployees_, importMasters: importMasters, getOrCreateRequestFolder_: getOrCreateRequestFolder_, checkAttachment_: checkAttachment_, uploadAttachmentImpl_: uploadAttachmentImpl_, deleteAttachmentImpl_: deleteAttachmentImpl_, getAttachmentImpl_: getAttachmentImpl_, notify: notify, notifyRecipients_: notifyRecipients_, sendNotification_: sendNotification_, onOpen: onOpen, alert_: alert_, ensureSheet_: ensureSheet_, getOrCreateFolder_: getOrCreateFolder_, menuSetup: menuSetup, runImportMenu_: runImportMenu_, menuImportAll: menuImportAll, menuImportMaterials: menuImportMaterials, menuImportSuppliers: menuImportSuppliers, menuImportEmployees: menuImportEmployees, menuRebuildDeptCategory: menuRebuildDeptCategory, menuIssuePin: menuIssuePin, menuClearCache: menuClearCache, menuInstallBackupTrigger: menuInstallBackupTrigger, runMonthlyBackup: runMonthlyBackup, assertEq_: assertEq_, assertTrue_: assertTrue_, assertThrows_: assertThrows_, testList_: testList_, runAllTests: runAllTests, menuRunAllTests: menuRunAllTests, skip_: skip_, testSettings_: testSettings_, testMasters_: testMasters_, testMaterials_: testMaterials_, testRequest_: testRequest_, validPayload_: validPayload_, test_endOfMonthBasic: test_endOfMonthBasic, test_endOfMonthLeap: test_endOfMonthLeap, test_endOfMonthLastDay: test_endOfMonthLastDay, test_dueDateWithDelivery: test_dueDateWithDelivery, test_csvDefaultColumns: test_csvDefaultColumns, test_csvLineEnding: test_csvLineEnding, test_csvLeadingZeros: test_csvLeadingZeros, test_csvBlankSupplier: test_csvBlankSupplier, test_csvUnfixedMaterial: test_csvUnfixedMaterial, test_csvEscape: test_csvEscape, test_csvSettingsChange: test_csvSettingsChange, test_csvConfigError: test_csvConfigError, vr_: vr_, requiredWith_: requiredWith_, test_validateDraftEmpty: test_validateDraftEmpty, test_validateFullEmpty: test_validateFullEmpty, test_validateItemName: test_validateItemName, test_validateReasonSurrogate: test_validateReasonSurrogate, test_quantityInvalid: test_quantityInvalid, test_quantityFullWidth: test_quantityFullWidth, test_quantityLeadingZero: test_quantityLeadingZero, test_invalidDate: test_invalidDate, test_validateUnknownSupplier: test_validateUnknownSupplier, test_validateManualEmpty: test_validateManualEmpty, test_validateNone: test_validateNone, test_validateUnitNote: test_validateUnitNote, test_validateNoApprover: test_validateNoApprover, test_requiredFieldsSwitch: test_requiredFieldsSwitch, test_requiredPartyOptional: test_requiredPartyOptional, test_requiredAttachment: test_requiredAttachment, rank_: rank_, test_rank1: test_rank1, test_rank2: test_rank2, test_rankAbbr: test_rankAbbr, test_rank3: test_rank3, test_rank4: test_rank4, test_rankInvalid: test_rankInvalid, test_rankManualNone: test_rankManualNone, test_permissionMatrix: test_permissionMatrix, test_selfApproval: test_selfApproval, test_transitions: test_transitions, test_requestIdSequence: test_requestIdSequence, test_requestId1000: test_requestId1000, test_parseSettings: test_parseSettings, test_parseRequiredFields: test_parseRequiredFields, test_validatePin: test_validatePin, requireGas_: requireGas_, test_gas_masterCounts: test_gas_masterCounts, test_gas_materialLeadingZeros: test_gas_materialLeadingZeros, testActors_: testActors_, markTest_: markTest_, cleanupTestRequests_: cleanupTestRequests_, call_: call_, expectError_: expectError_, test_gas_pinFlow: test_gas_pinFlow, test_gas_adminSpecifyPin: test_gas_adminSpecifyPin, test_gas_workflow: test_gas_workflow, test_gas_conflict: test_gas_conflict, test_gas_requiredFieldsSheet: test_gas_requiredFieldsSheet, test_gas_notifyDisabled: test_gas_notifyDisabled, menuSeedDevData: menuSeedDevData, seedDevData: seedDevData, seedSampleRequests_: seedSampleRequests_ } };
 })();
 </script>
 <script>
@@ -4695,6 +4857,22 @@ function seedSampleRequests_(adminId, accountingId) {
     } catch (e) { console.warn('サンプルを足せません: ' + e); }
   }
 
+  // URL のハッシュ（req=キー:1,キー:0）で「入力項目」シートの必須を変える（画面確認用。例: req=modelNo:1,quantity:0）
+  var reqMatch = String(location.hash || '').match(/req=([\w:,]+)/);
+  if (reqMatch) {
+    try {
+      fns.resetExecutionCache_();
+      if (!fns.readAll('FIELDS').length) { fns.menuSetup(); fns.resetExecutionCache_(); }
+      var want = {};
+      reqMatch[1].split(',').forEach(function (kv) { var a = kv.split(':'); want[a[0]] = a[1] === '1'; });
+      fns.readAll('FIELDS').forEach(function (r) {
+        if (Object.prototype.hasOwnProperty.call(want, r.key)) { r.required = want[r.key]; fns.writeRows_('FIELDS', r._row, [r]); }
+      });
+      fns.resetExecutionCache_();
+      saveState();
+    } catch (e) { console.warn('入力項目を変更できません: ' + e); }
+  }
+
   // URL のハッシュ（auth=1）で、指定した操作者を暗証番号 123456 で認証済みにする（画面確認用）
   if (/auth=1/.test(String(location.hash || ''))) {
     try {
@@ -4857,6 +5035,7 @@ function seedSampleRequests_(adminId, accountingId) {
     buildOperatorSelect();
     restoreOperator();
     buildStaticOptions();
+    applyRequiredBadges();
     setupCombo('supplier');
     setupCombo('delivery');
     setupCodeDialogCombo();
@@ -4874,6 +5053,17 @@ function seedSampleRequests_(adminId, accountingId) {
     buildOperatorSelect();
     restoreOperator();
     buildStaticOptions();
+    applyRequiredBadges();
+  }
+
+  /** 「入力項目」シートの設定に合わせて、必須・任意のバッジを切り替える（data-req の付いたバッジだけ。部門・承認者は常に必須） */
+  function applyRequiredBadges() {
+    const req = APP.init.requiredFields || {};
+    document.querySelectorAll('[data-req]').forEach(function (b) {
+      const on = req[b.getAttribute('data-req')] === true;
+      b.className = on ? 'badge-required' : 'badge-optional';
+      b.textContent = on ? '必須' : '任意';
+    });
   }
 
   function buildOperatorSelect() {
@@ -5269,7 +5459,9 @@ function seedSampleRequests_(adminId, accountingId) {
       quantity: toHalfWidth($('f-quantity').value).trim(),
       unitNote: $('f-unitNote').value,
       reason: $('f-reason').value,
-      deliveryDate: dateToSlash($('f-deliveryDate').value)
+      deliveryDate: dateToSlash($('f-deliveryDate').value),
+      // 保存の後にアップロードする添付の枠（必須の添付の判定に使う）
+      pendingAttachments: [1, 2].filter(function (n) { return !!APP.form.pending[n]; })
     };
   }
 

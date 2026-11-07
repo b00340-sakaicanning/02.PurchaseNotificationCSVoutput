@@ -84,7 +84,7 @@
             <div class="field-error" id="err-deptCode"></div>
           </div>
           <div class="form-group">
-            <label for="f-categoryCode">種別 <span class="badge-required">必須</span></label>
+            <label for="f-categoryCode">種別 <span class="badge-required" data-req="categoryCode">必須</span></label>
             <select id="f-categoryCode"></select>
             <div class="field-error" id="err-categoryCode"></div>
           </div>
@@ -103,7 +103,7 @@
         <h3 class="form-section-title">発注先・納入先</h3>
         <div class="form-grid-2">
           <div class="form-group party-group" id="party-supplier">
-            <label>発注先 <span class="badge-required">必須</span></label>
+            <label>発注先 <span class="badge-required" data-req="supplier">必須</span></label>
             <div class="radio-group">
               <label class="radio-pill"><input type="radio" name="supplierType" value="マスタ" onchange="onPartyTypeChange('supplier')"> マスタから選ぶ</label>
               <label class="radio-pill"><input type="radio" name="supplierType" value="手入力" onchange="onPartyTypeChange('supplier')"> 手入力</label>
@@ -122,7 +122,7 @@
             <div class="field-error" id="err-supplier"></div>
           </div>
           <div class="form-group party-group" id="party-delivery">
-            <label>納入先 <span class="badge-required">必須</span></label>
+            <label>納入先 <span class="badge-required" data-req="delivery">必須</span></label>
             <div class="radio-group">
               <label class="radio-pill"><input type="radio" name="deliveryType" value="マスタ" onchange="onPartyTypeChange('delivery')"> マスタから選ぶ</label>
               <label class="radio-pill"><input type="radio" name="deliveryType" value="手入力" onchange="onPartyTypeChange('delivery')"> 手入力</label>
@@ -145,36 +145,36 @@
         <h3 class="form-section-title">購入する物品</h3>
         <div class="form-grid-2">
           <div class="form-group">
-            <label for="f-itemName">購入物品名 <span class="badge-required">必須</span></label>
+            <label for="f-itemName">購入物品名 <span class="badge-required" data-req="itemName">必須</span></label>
             <input type="text" id="f-itemName" maxlength="100" placeholder="例: ボールペン（黒）">
             <div class="field-error" id="err-itemName"></div>
           </div>
           <div class="form-group">
-            <label for="f-modelNo">型番 <span class="badge-optional">任意</span></label>
+            <label for="f-modelNo">型番 <span class="badge-optional" data-req="modelNo">任意</span></label>
             <input type="text" id="f-modelNo" maxlength="100" placeholder="例: SXN-150-07">
             <div class="field-error" id="err-modelNo"></div>
           </div>
         </div>
         <div class="form-grid-3">
           <div class="form-group">
-            <label for="f-quantity">数量 <span class="badge-required">必須</span></label>
+            <label for="f-quantity">数量 <span class="badge-required" data-req="quantity">必須</span></label>
             <input type="text" id="f-quantity" inputmode="decimal" placeholder="例: 10" onblur="normalizeQuantityInput()">
             <div class="field-error" id="err-quantity"></div>
           </div>
           <div class="form-group">
-            <label for="f-unitNote">単位・補足 <span class="badge-optional">任意</span></label>
+            <label for="f-unitNote">単位・補足 <span class="badge-optional" data-req="unitNote">任意</span></label>
             <input type="text" id="f-unitNote" maxlength="20" placeholder="例: 箱、一式">
             <div class="field-error" id="err-unitNote"></div>
           </div>
           <div class="form-group">
-            <label for="f-deliveryDate">納品日 <span class="badge-optional">任意</span></label>
+            <label for="f-deliveryDate">納品日 <span class="badge-optional" data-req="deliveryDate">任意</span></label>
             <input type="date" id="f-deliveryDate">
             <div class="field-hint">未入力なら、CSVの納期は提出日の月末になります</div>
             <div class="field-error" id="err-deliveryDate"></div>
           </div>
         </div>
         <div class="form-group">
-          <label for="f-reason">理由 <span class="badge-required">必須</span></label>
+          <label for="f-reason">理由 <span class="badge-required" data-req="reason">必須</span></label>
           <textarea id="f-reason" rows="3" maxlength="500" placeholder="購入が必要な理由（500文字以内）"></textarea>
           <div class="field-error" id="err-reason"></div>
         </div>
@@ -182,18 +182,20 @@
         <h3 class="form-section-title">添付書類</h3>
         <div class="form-grid-2">
           <div class="form-group attach-group">
-            <label>添付1（見積書など金額がわかるもの） <span class="badge-optional">任意</span></label>
+            <label>添付1（見積書など金額がわかるもの） <span class="badge-optional" data-req="attachment1">任意</span></label>
             <div class="attach-row">
               <label class="btn-secondary btn-sm file-btn">ファイルを選ぶ<input type="file" id="f-att1" onchange="onAttachSelected(1)"></label>
               <div class="attach-current" id="att1-current"></div>
             </div>
+            <div class="field-error" id="err-attachment1"></div>
           </div>
           <div class="form-group attach-group">
-            <label>添付2（納品書） <span class="badge-optional">任意</span></label>
+            <label>添付2（納品書） <span class="badge-optional" data-req="attachment2">任意</span></label>
             <div class="attach-row">
               <label class="btn-secondary btn-sm file-btn">ファイルを選ぶ<input type="file" id="f-att2" onchange="onAttachSelected(2)"></label>
               <div class="attach-current" id="att2-current"></div>
             </div>
+            <div class="field-error" id="err-attachment2"></div>
           </div>
         </div>
         <div class="field-hint" id="attach-hint"></div>

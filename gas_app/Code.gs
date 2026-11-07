@@ -189,7 +189,8 @@ function buildInitData_() {
       quantityDecimals: s.QUANTITY_DECIMALS,
       pinSessionMinutes: s.PIN_SESSION_MINUTES,
       pinLength: s.PIN_LENGTH
-    }
+    },
+    requiredFields: getRequiredFields()
   };
 }
 
@@ -211,7 +212,8 @@ const SHEETS = {
   SUPPLIERS: '発注先マスタ',
   DELIVERIES: '納入先マスタ',
   MATERIALS: '資材マスタ',
-  SETTINGS: '設定'
+  SETTINGS: '設定',
+  FIELDS: '入力項目'
 };
 
 /** 列定義 [見出し, キー, 型]。型: T=書式なしテキスト, N=数値, B=TRUE/FALSE（03 データ設計） */
@@ -281,8 +283,29 @@ const COLUMNS = {
   ],
   SETTINGS: [
     ['キー', 'key', 'T'], ['値', 'value', 'T'], ['説明', 'description', 'T']
+  ],
+  FIELDS: [
+    ['キー', 'key', 'T'], ['項目', 'label', 'T'], ['必須', 'required', 'B'], ['説明', 'description', 'T']
   ]
 };
+
+/**
+ * 必須・任意を「入力項目」シートで切り替えられる項目 [キー, 項目名, 初期値（必須か）, 説明]（03 §3.11）
+ * 部門・承認者は承認の流れに必要なため、常に必須でここには載せない。
+ */
+const FIELD_REQUIREMENTS = [
+  ['categoryCode', '種別', true, '資材候補の判定に使う'],
+  ['supplier', '発注先', true, '任意にすると、空のとき CSV の発注先コードも空になる'],
+  ['delivery', '納入先', true, '任意にすると、空のとき CSV の納入先コードも空になる'],
+  ['itemName', '購入物品名', true, ''],
+  ['modelNo', '型番', false, ''],
+  ['quantity', '数量', true, '任意にすると、空のとき CSV の数量も空になる'],
+  ['unitNote', '単位・補足', false, ''],
+  ['deliveryDate', '納品日', false, '空なら、CSV の納期は提出日の月末になる'],
+  ['reason', '理由', true, ''],
+  ['attachment1', '添付1（見積書など）', false, '入力完了・承認依頼のときにファイルが必要になる'],
+  ['attachment2', '添付2（納品書）', false, '入力完了・承認依頼のときにファイルが必要になる']
+];
 
 const STATUS = {
   DRAFT: '一時保存',
@@ -385,6 +408,26 @@ function parseSettings_(raw) {
 
 function getSetting(key) {
   return getSettings()[key];
+}
+
+/** 入力項目シートの行から {キー: 必須か} を作る（純粋な関数）。行が無い項目は初期値、知らないキーは無視する */
+function parseRequiredFields_(rows) {
+  const out = {};
+  FIELD_REQUIREMENTS.forEach(function (f) { out[f[0]] = f[2]; });
+  (rows || []).forEach(function (r) {
+    const key = String(r.key || '').trim();
+    if (Object.prototype.hasOwnProperty.call(out, key)) out[key] = r.required === true || String(r.required).toUpperCase() === 'TRUE';
+  });
+  return out;
+}
+
+/** 必須にする項目 {キー: true/false}。シートが無いときは初期値（設定と同じく、マスタのキャッシュには入れない） */
+function getRequiredFields() {
+  if (EXEC_.requiredFields) return EXEC_.requiredFields;
+  let rows = [];
+  try { rows = readAll('FIELDS'); } catch (e) { rows = []; }
+  EXEC_.requiredFields = parseRequiredFields_(rows);
+  return EXEC_.requiredFields;
 }
 
 // =====================================================================
@@ -883,9 +926,11 @@ function getApproverCandidates_(masters, deptCode, applicantId) {
  * 届出の入力チェック。level は 'FORMAT'（形式のみ）か 'FULL'（必須＋形式）
  * 戻り値 {errors: {キー: メッセージ}, value: 正規化した値}
  */
-function validateRequest(payload, level, masters, applicantId) {
+function validateRequest(payload, level, masters, applicantId, required) {
   payload = payload || {};
   const full = level === 'FULL';
+  if (!required) { try { required = getRequiredFields(); } catch (e) { required = parseRequiredFields_([]); } }
+  const isReq = function (key) { return full && required[key] === true; };
   const errors = {};
   const s = function (v) { return (v === null || v === undefined) ? '' : String(v).trim(); };
   const p = {
@@ -895,12 +940,14 @@ function validateRequest(payload, level, masters, applicantId) {
     itemName: s(payload.itemName), modelNo: s(payload.modelNo), quantity: s(payload.quantity), unitNote: s(payload.unitNote),
     reason: s(payload.reason), deliveryDate: s(payload.deliveryDate)
   };
+  // 部門・承認者は常に必須。それ以外は入力項目シートで決める（required）
   const req = function (key, label) { if (full && !p[key]) errors[key] = (label || '') + '必須です'; };
+  const reqIf = function (key) { if (isReq(key) && !p[key]) errors[key] = '必須です'; };
   const max = function (key, n) { if (p[key] && charLength(p[key]) > n) errors[key] = n + '文字以内で入力してください'; };
 
   req('deptCode');
   if (p.deptCode && !masters.departments.some(function (d) { return d.enabled && d.deptCode === p.deptCode; })) errors.deptCode = '部門を選び直してください';
-  req('categoryCode');
+  reqIf('categoryCode');
   if (p.categoryCode && !masters.categories.some(function (c) { return c.enabled && c.categoryCode === p.categoryCode; })) errors.categoryCode = '種別を選び直してください';
 
   req('approverId');
@@ -915,7 +962,7 @@ function validateRequest(payload, level, masters, applicantId) {
     const typeKey = kind + 'Type', codeKey = kind + 'Code', branchKey = kind + 'Branch', nameKey = kind + 'Name';
     const list = kind === 'supplier' ? masters.suppliers : masters.deliveries;
     const type = p[typeKey];
-    if (!type) { if (full) errors[typeKey] = '選択してください'; p[codeKey] = ''; p[branchKey] = ''; return; }
+    if (!type) { if (isReq(kind)) errors[typeKey] = '選択してください'; p[codeKey] = ''; p[branchKey] = ''; p[nameKey] = ''; return; }
     if ([PARTY_TYPES.MASTER, PARTY_TYPES.MANUAL, PARTY_TYPES.NONE].indexOf(type) < 0) { errors[typeKey] = '区分が正しくありません'; return; }
     if (type === PARTY_TYPES.MASTER) {
       if (!p[codeKey]) { if (full) errors[codeKey] = 'マスタから選択してください'; p[nameKey] = ''; return; }
@@ -931,22 +978,30 @@ function validateRequest(payload, level, masters, applicantId) {
     }
   });
 
-  req('itemName'); max('itemName', LIMITS.itemName);
-  max('modelNo', LIMITS.modelNo);
-  max('unitNote', LIMITS.unitNote);
-  req('reason'); max('reason', LIMITS.reason);
+  reqIf('itemName'); max('itemName', LIMITS.itemName);
+  reqIf('modelNo'); max('modelNo', LIMITS.modelNo);
+  reqIf('unitNote'); max('unitNote', LIMITS.unitNote);
+  reqIf('reason'); max('reason', LIMITS.reason);
 
   if (p.quantity) {
     const q = normalizeQuantity(p.quantity, getQuantityDecimals_());
     if (q.ok) p.quantity = q.value; else errors.quantity = q.message;
-  } else if (full) {
+  } else if (isReq('quantity')) {
     errors.quantity = '必須です';
   }
 
   if (p.deliveryDate) {
     const d = isValidDate(p.deliveryDate);
     if (d) p.deliveryDate = d; else errors.deliveryDate = '正しい日付を入力してください';
+  } else {
+    reqIf('deliveryDate');
   }
+
+  // 添付は payload.attachments = {1: 付いているか, 2: …}（保存の後にアップロードするファイルも含める）
+  const att = payload.attachments || {};
+  [1, 2].forEach(function (n) {
+    if (isReq('attachment' + n) && !att[n]) errors['attachment' + n] = 'ファイルを添付してください';
+  });
   return { errors: errors, value: p };
 }
 
@@ -1038,6 +1093,7 @@ const PAYLOAD_KEYS_ = ['deptCode', 'categoryCode', 'approverId', 'supplierType',
 function requestToPayload_(req) {
   const p = {};
   PAYLOAD_KEYS_.forEach(function (k) { p[k] = req[k]; });
+  p.attachments = { 1: !!req.att1FileId, 2: !!req.att2FileId };
   return p;
 }
 
@@ -1120,6 +1176,9 @@ function saveRequestImpl_(ctx, payload, mode) {
       if (String(payload.approverId || '') !== req.approverId) f.approverId = 'この状態では変更できません';
       if (Object.keys(f).length) throw AppError('VALIDATION', '承認依頼中・承認済の届出では、部門と承認者を変更できません（K-05）', f);
     }
+    // 添付の有無 = すでに付いている添付 ＋ 画面で選び、保存の後にアップロードするファイル
+    const pending = (payload.pendingAttachments || []).map(Number);
+    payload.attachments = { 1: !!req.att1FileId || pending.indexOf(1) >= 0, 2: !!req.att2FileId || pending.indexOf(2) >= 0 };
     const v = validateRequest(payload, checkLevelFor_(action, statusBefore), masters, req.applicantId);
     if (Object.keys(v.errors).length) throw AppError('VALIDATION', '入力内容を確認してください', v.errors);
     applyPayload_(req, v.value, masters);
@@ -1854,6 +1913,9 @@ function deleteAttachmentImpl_(ctx, requestId, version, slot) {
     const role = requireAuthIfNeeded(ctx, 'ATTACH', req, masters);
     const oldId = req['att' + slot + 'FileId'];
     if (!oldId) throw AppError('VALIDATION', '添付がありません');
+    if (getRequiredFields()['attachment' + slot] && checkLevelFor_('EDIT', req.status) === 'FULL') {
+      throw AppError('VALIDATION', '必須の添付は削除できません。差し替えてください', { ['attachment' + slot]: '必須の添付は削除できません' });
+    }
     try { DriveApp.getFileById(oldId).setTrashed(true); } catch (e) { console.warn('添付をゴミ箱へ移せません: ' + e); }
     const name = req['att' + slot + 'FileName'];
     req['att' + slot + 'FileId'] = '';
@@ -1984,6 +2046,17 @@ function menuSetup() {
     if (keys.indexOf(k) < 0) add.push({ key: k, value: DEFAULT_SETTINGS[k][0], description: DEFAULT_SETTINGS[k][1] });
   });
   if (add.length) appendRows_('SETTINGS', add);
+  // 入力項目（必須・任意の切り替え）。足りない項目だけ初期値で追加する
+  const fieldKeys = readAll('FIELDS').map(function (r) { return r.key; });
+  const addFields = FIELD_REQUIREMENTS.filter(function (f) { return fieldKeys.indexOf(f[0]) < 0; })
+    .map(function (f) { return { key: f[0], label: f[1], required: f[2], description: f[3] }; });
+  if (addFields.length) appendRows_('FIELDS', addFields);
+  try {
+    const fs = ss.getSheetByName(SHEETS.FIELDS);
+    const n = fs.getLastRow() - 1;
+    const col = fs.getRange(1, 1, 1, fs.getLastColumn()).getValues()[0].map(String).indexOf('必須') + 1;
+    if (n > 0 && col > 0) fs.getRange(2, col, n, 1).insertCheckboxes(); // 「必須」列をチェックボックスにする
+  } catch (e) { console.warn('入力項目シートのチェックボックスを設定できません: ' + e); }
   // ドライブのフォルダ
   resetExecutionCache_();
   const isDev = String(ss.getName()).indexOf('開発') >= 0;

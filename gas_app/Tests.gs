@@ -72,6 +72,9 @@ function testList_() {
     ['TC-IN-11', '指定なしはコードと名称が空', test_validateNone, 'pure'],
     ['TC-IN-12', '単位・補足は20文字まで', test_validateUnitNote, 'pure'],
     ['TC-IN-14', '承認者の候補が0人なら承認依頼できない', test_validateNoApprover, 'pure'],
+    ['TC-IN-15', '入力項目シートの設定で必須が変わる', test_requiredFieldsSwitch, 'pure'],
+    ['TC-IN-16', '発注先を任意にすると区分が空でも通る', test_requiredPartyOptional, 'pure'],
+    ['TC-IN-17', '添付を必須にする', test_requiredAttachment, 'pure'],
     ['TC-MT-01', '購入物品名の完全一致は順位1', test_rank1, 'pure'],
     ['TC-MT-02', '種別・発注先コード・部門の一致は順位2', test_rank2, 'pure'],
     ['TC-MT-04', '資材名の「：」より後ろの略称で発注先が一致', test_rankAbbr, 'pure'],
@@ -85,6 +88,7 @@ function testList_() {
     ['TC-DL-03', '同じ日の連番', test_requestIdSequence, 'pure'],
     ['TC-DL-04', '1000件目以降は4桁', test_requestId1000, 'pure'],
     ['TC-CFG-01', '設定の型変換', test_parseSettings, 'pure'],
+    ['TC-CFG-02', '入力項目シートの読み取り', test_parseRequiredFields, 'pure'],
     ['TC-AU-09', '指定する暗証番号の形式チェック', test_validatePin, 'pure'],
     ['TC-MI-01', 'マスタの件数（資材・発注先・社員・部署・種別）', test_gas_masterCounts, 'gas'],
     ['TC-MI-02', '資材コードの先頭の0', test_gas_materialLeadingZeros, 'gas'],
@@ -92,6 +96,7 @@ function testList_() {
     ['TC-AU-10', '管理者が番号を指定して設定する', test_gas_adminSpecifyPin, 'gas'],
     ['TC-FLOW', '入力→承認依頼→承認→資材確定→CSV→反映済→承認済に戻す', test_gas_workflow, 'gas'],
     ['TC-DL-05', '古いバージョンでの更新は CONFLICT', test_gas_conflict, 'gas'],
+    ['TC-IN-18', '入力項目シートを変えると保存時の必須と画面のバッジが変わる', test_gas_requiredFieldsSheet, 'gas'],
     ['TC-NT-01', '通知が無効なら送らない', test_gas_notifyDisabled, 'gas']
   ];
 }
@@ -284,29 +289,40 @@ function test_csvConfigError() {
 // pure テスト: 入力チェック
 // ---------------------------------------------------------------------
 
+/** 入力チェック（必須の設定は、省略すると初期値。シートの値に左右されないようにする） */
+function vr_(payload, level, masters, applicantId, required) {
+  return validateRequest(payload, level, masters, applicantId, required || parseRequiredFields_([]));
+}
+/** 初期値から一部の項目だけ必須・任意を変えた設定 */
+function requiredWith_(over) {
+  const r = parseRequiredFields_([]);
+  Object.keys(over).forEach(function (k) { r[k] = over[k]; });
+  return r;
+}
+
 function test_validateDraftEmpty() {
-  const v = validateRequest({}, 'FORMAT', testMasters_(), 'u1@example.com');
+  const v = vr_({}, 'FORMAT', testMasters_(), 'u1@example.com');
   assertEq_(Object.keys(v.errors), []);
 }
 function test_validateFullEmpty() {
-  const v = validateRequest({}, 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_({}, 'FULL', testMasters_(), 'u1@example.com');
   ['deptCode', 'categoryCode', 'approverId', 'supplierType', 'deliveryType', 'itemName', 'quantity', 'reason'].forEach(function (k) {
     assertTrue_(!!v.errors[k], k + ' のエラーがありません');
   });
-  const ok = validateRequest(validPayload_(), 'FULL', testMasters_(), 'u1@example.com');
+  const ok = vr_(validPayload_(), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_(ok.errors, {}, '正しい入力');
   assertEq_(ok.value.supplierName, '株式会社ダイナパック', 'マスタの名称が入る');
 }
 function test_validateItemName() {
   const long = new Array(102).join('あ'); // 101文字
-  assertTrue_(!!validateRequest(validPayload_({ itemName: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName);
-  assertTrue_(!validateRequest(validPayload_({ itemName: long.substr(1) }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName, '100文字は通る');
-  assertTrue_(!!validateRequest(validPayload_({ modelNo: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.modelNo, 'TC-IN-13 型番');
+  assertTrue_(!!vr_(validPayload_({ itemName: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName);
+  assertTrue_(!vr_(validPayload_({ itemName: long.substr(1) }), 'FORMAT', testMasters_(), 'u1@example.com').errors.itemName, '100文字は通る');
+  assertTrue_(!!vr_(validPayload_({ modelNo: long }), 'FORMAT', testMasters_(), 'u1@example.com').errors.modelNo, 'TC-IN-13 型番');
 }
 function test_validateReasonSurrogate() {
   const emoji500 = new Array(501).join('😀'); // 500文字（UTF-16では1000）
-  assertTrue_(!validateRequest(validPayload_({ reason: emoji500 }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '絵文字500文字は通る');
-  assertTrue_(!!validateRequest(validPayload_({ reason: emoji500 + 'あ' }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '501文字はエラー');
+  assertTrue_(!vr_(validPayload_({ reason: emoji500 }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '絵文字500文字は通る');
+  assertTrue_(!!vr_(validPayload_({ reason: emoji500 + 'あ' }), 'FULL', testMasters_(), 'u1@example.com').errors.reason, '501文字はエラー');
 }
 function test_quantityInvalid() {
   ['0', '-1', 'abc', '1.2345', '0.000'].forEach(function (q) {
@@ -323,32 +339,60 @@ function test_invalidDate() {
   assertEq_(isValidDate('2026/02/30'), null);
   assertEq_(isValidDate('2028-02-29'), '2028/02/29');
   assertEq_(isValidDate('2026/13/01'), null);
-  assertTrue_(!!validateRequest(validPayload_({ deliveryDate: '2026/02/30' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.deliveryDate);
+  assertTrue_(!!vr_(validPayload_({ deliveryDate: '2026/02/30' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.deliveryDate);
 }
 function test_validateUnknownSupplier() {
-  assertTrue_(!!validateRequest(validPayload_({ supplierCode: '999999' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.supplierCode);
+  assertTrue_(!!vr_(validPayload_({ supplierCode: '999999' }), 'FORMAT', testMasters_(), 'u1@example.com').errors.supplierCode);
 }
 function test_validateManualEmpty() {
-  const v = validateRequest(validPayload_({ supplierType: '手入力', supplierCode: '', supplierName: '' }), 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_(validPayload_({ supplierType: '手入力', supplierCode: '', supplierName: '' }), 'FULL', testMasters_(), 'u1@example.com');
   assertTrue_(!!v.errors.supplierName);
-  const ok = validateRequest(validPayload_({ supplierType: '手入力', supplierCode: '000315', supplierName: '山田商会' }), 'FULL', testMasters_(), 'u1@example.com');
+  const ok = vr_(validPayload_({ supplierType: '手入力', supplierCode: '000315', supplierName: '山田商会' }), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_([ok.value.supplierCode, ok.value.supplierName], ['', '山田商会'], '手入力はコードを持たない');
 }
 function test_validateNone() {
-  const v = validateRequest(validPayload_({ supplierType: '指定なし', supplierCode: '000315', supplierName: 'x' }), 'FULL', testMasters_(), 'u1@example.com');
+  const v = vr_(validPayload_({ supplierType: '指定なし', supplierCode: '000315', supplierName: 'x' }), 'FULL', testMasters_(), 'u1@example.com');
   assertEq_([v.value.supplierCode, v.value.supplierName, Object.keys(v.errors).length], ['', '', 0]);
 }
 function test_validateUnitNote() {
-  assertTrue_(!!validateRequest(validPayload_({ unitNote: new Array(22).join('a') }), 'FORMAT', testMasters_(), 'u1@example.com').errors.unitNote);
+  assertTrue_(!!vr_(validPayload_({ unitNote: new Array(22).join('a') }), 'FORMAT', testMasters_(), 'u1@example.com').errors.unitNote);
 }
 function test_validateNoApprover() {
   const m = testMasters_();
   // 品質保証課の承認者は u6 だけ。u6 が入力者なら候補は0人
-  const v = validateRequest(validPayload_({ deptCode: '30', approverId: '' }), 'FULL', m, 'u6@example.com');
+  const v = vr_(validPayload_({ deptCode: '30', approverId: '' }), 'FULL', m, 'u6@example.com');
   assertTrue_(/登録されていません/.test(v.errors.approverId || ''), v.errors.approverId);
-  const self = validateRequest(validPayload_({ deptCode: '30', approverId: 'u6@example.com' }), 'FULL', m, 'u6@example.com');
+  const self = vr_(validPayload_({ deptCode: '30', approverId: 'u6@example.com' }), 'FULL', m, 'u6@example.com');
   assertTrue_(!!self.errors.approverId, '自分を承認者にできない');
   assertEq_(getApproverCandidates_(m, '23', 'u1@example.com').map(function (c) { return c.employeeId; }), ['u2@example.com', 'u3@example.com'], '優先順');
+}
+
+function test_requiredFieldsSwitch() {
+  const m = testMasters_();
+  const r = requiredWith_({ modelNo: true, quantity: false, reason: false });
+  const v = vr_(validPayload_({ modelNo: '', quantity: '', reason: '' }), 'FULL', m, 'u1@example.com', r);
+  assertTrue_(!!v.errors.modelNo, '型番を必須にしたのにエラーになりません');
+  assertTrue_(!v.errors.quantity && !v.errors.reason, '任意にした数量・理由がエラーになっています: ' + JSON.stringify(v.errors));
+  assertTrue_(!!vr_(validPayload_({ quantity: '0' }), 'FULL', m, 'u1@example.com', r).errors.quantity, '任意でも形式は確かめる');
+  assertEq_(Object.keys(vr_(validPayload_({ modelNo: '' }), 'FORMAT', m, 'u1@example.com', r).errors), [], '一時保存では必須を見ない');
+  const always = vr_(validPayload_({ deptCode: '', approverId: '' }), 'FULL', m, 'u1@example.com', requiredWith_({}));
+  assertTrue_(!!always.errors.deptCode && !!always.errors.approverId, '部門・承認者は常に必須');
+}
+function test_requiredPartyOptional() {
+  const m = testMasters_();
+  const r = requiredWith_({ supplier: false });
+  const v = vr_(validPayload_({ supplierType: '', supplierCode: '000315' }), 'FULL', m, 'u1@example.com', r);
+  assertEq_([v.errors.supplierType, v.value.supplierCode], [undefined, ''], '区分が空なら通り、コードは空にする');
+  assertTrue_(!!vr_(validPayload_({ supplierType: 'マスタ', supplierCode: '' }), 'FULL', m, 'u1@example.com', r).errors.supplierCode, 'マスタを選んだらコードが要る');
+  assertTrue_(!!vr_(validPayload_({ supplierType: '' }), 'FULL', m, 'u1@example.com').errors.supplierType, '初期値では必須');
+}
+function test_requiredAttachment() {
+  const m = testMasters_();
+  const r = requiredWith_({ attachment1: true });
+  assertTrue_(!!vr_(validPayload_(), 'FULL', m, 'u1@example.com', r).errors.attachment1, '添付が無ければエラー');
+  assertTrue_(!vr_(validPayload_({ attachments: { 1: true } }), 'FULL', m, 'u1@example.com', r).errors.attachment1, '添付があれば通る');
+  assertTrue_(!vr_(validPayload_(), 'FULL', m, 'u1@example.com').errors.attachment1, '初期値では任意');
+  assertTrue_(!vr_(validPayload_(), 'FORMAT', m, 'u1@example.com', r).errors.attachment1, '一時保存では見ない');
 }
 
 // ---------------------------------------------------------------------
@@ -470,6 +514,17 @@ function test_parseSettings() {
   assertEq_([s.PIN_SESSION_MINUTES, s.CSV_HEADER, s.CSV_DELIMITER], [45, false, '\t']);
   assertEq_(s.STATUS_COLORS['承認済'].bg, '#d1fae5', '壊れたJSONは既定値');
   assertEq_(s.QUANTITY_DECIMALS, 3);
+}
+function test_parseRequiredFields() {
+  const d = parseRequiredFields_([]);
+  assertEq_([d.itemName, d.quantity, d.modelNo, d.attachment1], [true, true, false, false], '行が無ければ初期値');
+  const r = parseRequiredFields_([
+    { key: 'modelNo', label: '型番（名前を変えても可）', required: true },
+    { key: 'quantity', required: 'FALSE' },
+    { key: 'deptCode', required: false },
+    { key: 'unknown', required: true }
+  ]);
+  assertEq_([r.modelNo, r.quantity, r.itemName, r.deptCode, r.unknown], [true, false, true, undefined, undefined], 'キーで照合し、知らないキーは無視');
 }
 function test_validatePin() {
   assertEq_(validatePin_('482913', 6).ok, true, '6桁の数字');
@@ -694,6 +749,37 @@ function test_gas_conflict() {
     expectError_(saveRequest(ctxU, { requestId: r.requestId, version: r.version, deptCode: a.deptCode, itemName: '2回目' }, 'DRAFT'), 'CONFLICT', 'TC-DL-05');
     return '古いバージョン ' + r.version + ' での保存が CONFLICT になることを確認';
   } finally {
+    cleanupTestRequests_();
+  }
+}
+
+function test_gas_requiredFieldsSheet() {
+  requireGas_();
+  const a = testActors_();
+  const rows = readAll('FIELDS');
+  const row = rows.filter(function (r) { return r.key === 'modelNo'; })[0];
+  if (!row) throw skip_('入力項目シートが無いか、型番の行がありません（初期セットアップを再実行してください）');
+  const original = row.required;
+  const ctxU = { operatorId: a.applicant, token: null };
+  try {
+    row.required = true;
+    writeRows_('FIELDS', row._row, [row]);
+    resetExecutionCache_();
+    assertEq_(buildInitData_().requiredFields.modelNo, true, '画面へ渡す設定');
+    const supplier = a.masters.suppliers.filter(function (x) { return x.visible; })[0];
+    const payload = {
+      deptCode: a.deptCode, categoryCode: a.categoryCode, approverId: a.approver,
+      supplierType: supplier ? 'マスタ' : '手入力', supplierCode: supplier ? supplier.code : '', supplierBranch: supplier ? supplier.branch : '', supplierName: supplier ? '' : 'テスト商店',
+      deliveryType: '手入力', deliveryName: 'テスト倉庫', itemName: '【テスト】必須の切り替え', modelNo: '', quantity: '1', unitNote: '', reason: '自動テスト', deliveryDate: ''
+    };
+    const res = saveRequest(ctxU, payload, 'COMPLETE');
+    expectError_(res, 'VALIDATION', '型番が空');
+    assertTrue_(!!res.error.fields.modelNo, '型番のエラーがありません');
+    return '型番を必須にすると、空のまま入力完了にできないことを確認';
+  } finally {
+    row.required = original;
+    writeRows_('FIELDS', row._row, [row]);
+    resetExecutionCache_();
     cleanupTestRequests_();
   }
 }
