@@ -145,7 +145,11 @@ function adminIssuePin(ctx, employeeId, pin) {
 function adminGetSettings(ctx) {
   return handle_(function () {
     requirePrivileged_(ctx, ['admin'], getMasters());
-    const rows = readAll('SETTINGS').map(function (r) { return { key: r.key, value: r.value, description: r.description }; });
+    // 説明が空の行は、既定値の説明で補う（古い環境で作った行など）
+    const rows = readAll('SETTINGS').map(function (r) {
+      const def = DEFAULT_SETTINGS[r.key];
+      return { key: r.key, value: r.value, description: r.description || (def ? def[1] : '') };
+    });
     return { settings: rows, spreadsheetUrl: getSpreadsheet_().getUrl() };
   });
 }
@@ -188,7 +192,8 @@ function buildInitData_() {
       attachmentAllowedExt: s.ATTACHMENT_ALLOWED_EXT,
       quantityDecimals: s.QUANTITY_DECIMALS,
       pinSessionMinutes: s.PIN_SESSION_MINUTES,
-      pinLength: s.PIN_LENGTH
+      pinLength: s.PIN_LENGTH,
+      listPageSize: s.LIST_PAGE_SIZE
     },
     requiredFields: getRequiredFields()
   };
@@ -362,9 +367,10 @@ const DEFAULT_SETTINGS = {
   MATERIAL_CANDIDATE_LIMIT: ['10', '保存する資材候補の件数'],
   REQUEST_ID_PREFIX: ['PR', '届出IDの接頭辞'],
   MASTER_CACHE_SECONDS: ['21600', 'マスタをキャッシュする秒数（上限21600）'],
-  SUPPLIER_VISIBLE_ACCOUNTS: ['買掛金,未払金', '新しく取り込んだ発注先を表示にする科目名2']
+  SUPPLIER_VISIBLE_ACCOUNTS: ['買掛金,未払金', '新しく取り込んだ発注先を表示にする科目名2'],
+  LIST_PAGE_SIZE: ['50', '一覧の1ページに表示する件数（入力データ一覧・承認済一覧・システム反映済一覧）。0 なら全件']
 };
-const NUMBER_SETTING_KEYS = ['PIN_LENGTH', 'PIN_SESSION_MINUTES', 'PIN_MAX_FAILS', 'PIN_LOCK_MINUTES', 'ATTACHMENT_MAX_MB', 'QUANTITY_DECIMALS', 'MATERIAL_CANDIDATE_LIMIT', 'MASTER_CACHE_SECONDS'];
+const NUMBER_SETTING_KEYS = ['PIN_LENGTH', 'PIN_SESSION_MINUTES', 'PIN_MAX_FAILS', 'PIN_LOCK_MINUTES', 'ATTACHMENT_MAX_MB', 'QUANTITY_DECIMALS', 'MATERIAL_CANDIDATE_LIMIT', 'MASTER_CACHE_SECONDS', 'LIST_PAGE_SIZE'];
 const BOOL_SETTING_KEYS = ['CSV_HEADER', 'NOTIFY_ENABLED'];
 const JSON_SETTING_KEYS = ['STATUS_COLORS'];
 

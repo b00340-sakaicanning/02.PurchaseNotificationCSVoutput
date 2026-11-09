@@ -252,6 +252,7 @@
             <tbody id="list-body"><tr><td colspan="8" class="table-loading">読み込み中...</td></tr></tbody>
           </table>
         </div>
+        <div class="pager" id="list-pager" style="display:none;"></div>
       </div>
     </section>
 
@@ -299,6 +300,7 @@
             <tbody id="approved-body"><tr><td colspan="9" class="table-loading">読み込み中...</td></tr></tbody>
           </table>
         </div>
+        <div class="pager" id="approved-pager" style="display:none;"></div>
       </div>
     </section>
 
@@ -343,6 +345,7 @@
             <tbody id="reflected-body"><tr><td colspan="9" class="table-loading">読み込み中...</td></tr></tbody>
           </table>
         </div>
+        <div class="pager" id="reflected-pager" style="display:none;"></div>
       </div>
     </section>
 
@@ -535,7 +538,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
       </div>
       <h3>暗証番号の入力</h3>
-      <p>承認者・管理者・経理として操作するには、暗証番号が必要です。<br>操作者: <strong id="pin-operator-name"></strong></p>
+      <p><span id="pin-message">承認者・管理者・経理として操作するには、暗証番号が必要です。</span><br>操作者: <strong id="pin-operator-name"></strong></p>
       <div class="form-group">
         <input type="password" id="pin-input" class="pin-input" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="暗証番号">
         <div class="field-error center" id="pin-error"></div>

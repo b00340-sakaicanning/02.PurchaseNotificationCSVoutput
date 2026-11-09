@@ -16,6 +16,8 @@
     form: { request: null, pending: { 1: null, 2: null }, noApprover: false },
     lists: { ALL: null, APPROVED: null, REFLECTED: null },
     listFilter: { statuses: [], quick: '' },
+    page: { list: 1, approved: 1, reflected: 1 },
+    pageSig: { list: '', approved: '', reflected: '' },
     sort: {
       list: { key: 'updatedAt', dir: -1 },
       approved: { key: 'requestId', dir: 1 },
@@ -138,6 +140,7 @@
     const m = String(location.hash || '').match(/tab=(\w+)/);
     switchTab(m ? m[1] : 'new');
     setInterval(updateAuthStatus, 30000);
+    confirmRestoredOperator_();
   }
 
   async function reloadInitData() {
@@ -165,25 +168,71 @@
     let html = '<option value="">操作者を選択してください</option>';
     Object.keys(groups).forEach(function (g) {
       html += '<optgroup label="' + escapeHtml(g) + '">' + groups[g].map(function (e) {
-        return '<option value="' + escapeHtml(e.employeeId) + '">' + escapeHtml(e.name) + '（' + escapeHtml(e.section || '課なし') + '）</option>';
+        const roles = operatorRoleLabels(e.employeeId);
+        return '<option value="' + escapeHtml(e.employeeId) + '">' + escapeHtml(e.name) + '（' + escapeHtml(e.section || '課なし') + '）' +
+          (roles.length ? escapeHtml('[' + roles.join('・') + ']') : '') + '</option>';
       }).join('') + '</optgroup>';
     });
     sel.innerHTML = html;
   }
 
+  /** その社員の権限名（管理者 → 経理 → 承認者の順）。入力だけの人は空 */
+  function operatorRoleLabels(id) {
+    const out = [];
+    if (!id || !APP.init) return out;
+    if (APP.init.roleHolders.admins.indexOf(id) >= 0) out.push('管理者');
+    if (APP.init.roleHolders.accountings.indexOf(id) >= 0) out.push('経理');
+    if ((APP.init.approvers || []).some(function (a) { return a.approverId === id; })) out.push('承認者');
+    return out;
+  }
+  /** 操作者に選ぶときに暗証番号が要るか（承認者・管理者・経理） */
+  function needsPinOnSelect(id) { return operatorRoleLabels(id).length > 0; }
+  const SELECT_PIN_MESSAGE = '承認者・管理者・経理の権限を持つ人を操作者にするには、暗証番号が必要です。';
+
   function restoreOperator() {
-    const saved = APP.operatorId || storageGet('localStorage', STORAGE_OPERATOR) || '';
+    const already = APP.operatorId;
+    const saved = already || storageGet('localStorage', STORAGE_OPERATOR) || '';
     const exists = APP.init.employees.some(function (e) { return e.employeeId === saved; });
     APP.operatorId = exists ? saved : '';
-    $('operator-select').value = APP.operatorId;
     loadAuth();
+    APP.pendingOperator = '';
+    // 画面を開いたとき、前回の操作者が権限を持つ人で、このタブに認証が無ければ、暗証番号を確かめてから選ぶ
+    if (!already && APP.operatorId && needsPinOnSelect(APP.operatorId) && !APP.auth) {
+      APP.pendingOperator = APP.operatorId;
+      APP.operatorId = '';
+    }
+    $('operator-select').value = APP.operatorId;
     updateRoleUi();
   }
+  async function confirmRestoredOperator_() {
+    const id = APP.pendingOperator;
+    APP.pendingOperator = '';
+    if (!id) return;
+    const ok = await promptPin(id, SELECT_PIN_MESSAGE);
+    if (ok) applyOperator_(id, true);
+    else storageSet('localStorage', STORAGE_OPERATOR, ''); // キャンセルなら未選択のまま
+  }
 
-  function onOperatorChange() {
-    APP.operatorId = $('operator-select').value;
-    storageSet('localStorage', STORAGE_OPERATOR, APP.operatorId);
-    clearAuth();
+  async function onOperatorChange() {
+    const sel = $('operator-select');
+    const id = sel.value;
+    const prev = APP.operatorId;
+    if (id === prev) return;
+    if (id && needsPinOnSelect(id)) {
+      // 権限を持つ人は、認証できたときだけ切り替える。キャンセルなら元の操作者に戻す（認証状態もそのまま）
+      sel.value = prev;
+      const ok = await promptPin(id, SELECT_PIN_MESSAGE);
+      if (ok) applyOperator_(id, true);
+      return;
+    }
+    applyOperator_(id, false);
+  }
+  /** 操作者を切り替える。keepAuth=true なら、いま取った認証を残す */
+  function applyOperator_(id, keepAuth) {
+    APP.operatorId = id;
+    $('operator-select').value = id;
+    storageSet('localStorage', STORAGE_OPERATOR, id);
+    if (!keepAuth) clearAuth();
     APP.adminReady = false;
     APP.selected.approved.clear();
     APP.selected.reflected.clear();
@@ -229,6 +278,12 @@
     if (APP.auth) await callServer_('logout', [ctx()]);
     clearAuth();
     APP.adminReady = false;
+    if (needsPinOnSelect(APP.operatorId)) {
+      // 権限を持つ人は、認証しないと操作者に選べないため、未選択に戻す
+      applyOperator_('', false);
+      showToast('認証を解除しました。操作者を選び直してください', 'info');
+      return;
+    }
     if (APP.tab === 'admin') showAdminLocked();
     showToast('認証を解除しました', 'info');
   }
@@ -240,11 +295,16 @@
     $('pin-cancel').addEventListener('click', function () { closePin(false); });
     $('pin-input').addEventListener('keydown', function (e) { if (e.key === 'Enter') submitPin(); });
   }
-  function promptPin() {
-    if (!APP.operatorId) { showToast('先に操作者を選択してください', 'error'); return Promise.resolve(false); }
+  let pinTarget = '';
+  /** 暗証番号ダイアログ。targetId を省略すると今の操作者。message はダイアログの説明文 */
+  function promptPin(targetId, message) {
+    const id = targetId || APP.operatorId;
+    if (!id) { showToast('先に操作者を選択してください', 'error'); return Promise.resolve(false); }
     return new Promise(function (resolve) {
       pinResolver = resolve;
-      $('pin-operator-name').textContent = employeeName(APP.operatorId);
+      pinTarget = id;
+      $('pin-message').textContent = message || '承認者・管理者・経理として操作するには、暗証番号が必要です。';
+      $('pin-operator-name').textContent = employeeName(id);
       $('pin-input').value = '';
       $('pin-error').textContent = '';
       $('pin-modal').style.display = 'flex';
@@ -255,10 +315,10 @@
     const pin = $('pin-input').value.trim();
     if (!pin) { $('pin-error').textContent = '暗証番号を入力してください'; return; }
     $('pin-ok').disabled = true;
-    const res = await callServer_('authenticate', [APP.operatorId, pin]);
+    const res = await callServer_('authenticate', [pinTarget, pin]);
     $('pin-ok').disabled = false;
     if (!res.ok) { $('pin-error').textContent = res.error.message; $('pin-input').select(); return; }
-    APP.auth = { operatorId: APP.operatorId, token: res.data.token, expiresAtMs: res.data.expiresAtMs };
+    APP.auth = { operatorId: pinTarget, token: res.data.token, expiresAtMs: res.data.expiresAtMs };
     storageSet('sessionStorage', STORAGE_AUTH, JSON.stringify(APP.auth));
     updateAuthStatus();
     closePin(true);
@@ -897,6 +957,56 @@
     const dis = check && !check.ok;
     return '<button type="button" class="' + cls + ' btn-sm" ' + (dis ? 'disabled title="' + escapeHtml(check.reason) + '"' : 'onclick="' + onclick + '"') + '>' + escapeHtml(label) + '</button>';
   }
+  // ページング（画面の中で行う。1ページの件数は設定 LIST_PAGE_SIZE。plan/05 §4.0）
+  /** 絞り込み・並び替え・操作者が変わったかを見分ける文字列。変わったら1ページ目に戻す */
+  function listSignature_(viewId, extra) {
+    const vals = Array.from(document.querySelectorAll('#' + viewId + ' .logs-filter-container input, #' + viewId + ' .logs-filter-container select'))
+      .map(function (el) { return el.value; });
+    const kind = { 'view-list': 'list', 'view-approved': 'approved', 'view-reflected': 'reflected' }[viewId];
+    return JSON.stringify([APP.operatorId, APP.sort[kind], vals, extra]);
+  }
+  /** 今のページの行と、表示範囲を返す。ページ番号は範囲内に収める */
+  function pageSlice(kind, rows, sig) {
+    if (APP.pageSig[kind] !== sig) { APP.page[kind] = 1; APP.pageSig[kind] = sig; }
+    const size = Number(APP.init.limits.listPageSize) || 0;
+    const total = rows.length;
+    if (size <= 0 || total <= size) { APP.page[kind] = 1; return { rows: rows, from: total ? 1 : 0, to: total, page: 1, pages: 1 }; }
+    const pages = Math.ceil(total / size);
+    const page = Math.min(Math.max(1, APP.page[kind] || 1), pages);
+    APP.page[kind] = page;
+    const start = (page - 1) * size;
+    return { rows: rows.slice(start, start + size), from: start + 1, to: Math.min(start + size, total), page: page, pages: pages };
+  }
+  function countText_(all, hit, pg) {
+    return all + '件中 ' + hit + '件' + (pg.pages > 1 ? 'が該当・' + pg.from + '〜' + pg.to + '件目を表示' : 'を表示');
+  }
+  /** ページ送り（« 前へ 1 2 … 9 次へ »）。1ページに収まるときは出さない */
+  function renderPager(kind, pg) {
+    const el = $(kind + '-pager');
+    if (pg.pages <= 1) { el.innerHTML = ''; el.style.display = 'none'; return; }
+    const nums = [];
+    for (let i = 1; i <= pg.pages; i++) {
+      if (i === 1 || i === pg.pages || Math.abs(i - pg.page) <= 2) nums.push(i);
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    const btn = function (label, page, opts) {
+      opts = opts || {};
+      return '<button type="button" class="pager-btn' + (opts.active ? ' active' : '') + '"' + (opts.disabled ? ' disabled' : ' onclick="goPage(\'' + kind + '\',' + page + ')"') + '>' + label + '</button>';
+    };
+    el.innerHTML = btn('« 前へ', pg.page - 1, { disabled: pg.page <= 1 }) +
+      nums.map(function (n) { return n === '…' ? '<span class="pager-gap">…</span>' : btn(String(n), n, { active: n === pg.page }); }).join('') +
+      btn('次へ »', pg.page + 1, { disabled: pg.page >= pg.pages }) +
+      '<span class="pager-info">' + pg.page + ' / ' + pg.pages + 'ページ</span>';
+    el.style.display = '';
+  }
+  function goPage(kind, page) {
+    APP.page[kind] = page;
+    ({ list: renderRequestList, approved: renderApprovedList, reflected: renderReflectedList })[kind]();
+    const c = document.querySelector('#view-' + kind + ' .table-container');
+    if (c) c.scrollTop = 0;
+    fitTables();
+  }
+
   /** 一覧の行のボタン。押せないボタンは表示しない（理由は詳細画面で確かめる） */
   function rowBtn(label, cls, onclick, check) { return check && !check.ok ? '' : actionBtn(label, cls, onclick); }
   /** 2段のセル（上: 主な値 / 下: 補足） */
@@ -966,9 +1076,11 @@
       return true;
     }), APP.sort.list);
     markSortHeader('list-table', APP.sort.list);
-    $('list-count').textContent = all.length + '件中 ' + rows.length + '件を表示';
+    const pg = pageSlice('list', rows, listSignature_('view-list', [f.statuses.join(','), f.quick]));
+    $('list-count').textContent = countText_(all.length, rows.length, pg);
+    renderPager('list', pg);
     if (!rows.length) { $('list-body').innerHTML = '<tr><td colspan="' + LIST_COLS.ALL + '" class="table-empty">該当する届出がありません</td></tr>'; return; }
-    $('list-body').innerHTML = rows.map(function (r) {
+    $('list-body').innerHTML = pg.rows.map(function (r) {
       const id = escapeHtml(r.requestId);
       const editCheck = canEdit(r) ? { ok: true } : { ok: false, reason: 'この届出は修正できません' };
       return '<tr' + rowStyle(r.status) + '>' +
@@ -1047,14 +1159,16 @@
     }), APP.sort.approved);
     pruneSelection('approved', all);
     markSortHeader('approved-table', APP.sort.approved);
-    $('approved-count').textContent = '（' + all.length + '件中 ' + rows.length + '件を表示）';
+    const pg = pageSlice('approved', rows, listSignature_('view-approved', []));
+    $('approved-count').textContent = '（' + countText_(all.length, rows.length, pg) + '）';
+    renderPager('approved', pg);
     const privileged = isAdmin() || isAccounting();
     $('btn-export-approved').disabled = !privileged;
     $('btn-mark-reflected').disabled = !privileged;
     $('btn-export-approved').title = privileged ? '' : '経理担当・管理者だけが行えます';
     $('btn-mark-reflected').title = privileged ? '' : '経理担当・管理者だけが行えます';
     if (!rows.length) { $('approved-body').innerHTML = '<tr><td colspan="' + LIST_COLS.APPROVED + '" class="table-empty">承認済の届出はありません</td></tr>'; updateSelectedCount('approved'); return; }
-    $('approved-body').innerHTML = rows.map(function (r) {
+    $('approved-body').innerHTML = pg.rows.map(function (r) {
       const id = escapeHtml(r.requestId);
       const sel = APP.selected.approved.has(r.requestId);
       return '<tr' + rowStyle(r.status) + (sel ? ' data-selected="1"' : '') + '>' +
@@ -1080,12 +1194,14 @@
     const rows = sortRows(filterByCommon(all, 'rf', 'reflectedAt'), APP.sort.reflected);
     pruneSelection('reflected', all);
     markSortHeader('reflected-table', APP.sort.reflected);
-    $('reflected-count').textContent = '（' + all.length + '件中 ' + rows.length + '件を表示）';
+    const pg = pageSlice('reflected', rows, listSignature_('view-reflected', []));
+    $('reflected-count').textContent = '（' + countText_(all.length, rows.length, pg) + '）';
+    renderPager('reflected', pg);
     const privileged = isAdmin() || isAccounting();
     $('btn-export-reflected').disabled = !privileged;
     $('btn-export-reflected').title = privileged ? '' : '経理担当・管理者だけが行えます';
     if (!rows.length) { $('reflected-body').innerHTML = '<tr><td colspan="' + LIST_COLS.REFLECTED + '" class="table-empty">システム反映済の届出はありません</td></tr>'; updateSelectedCount('reflected'); return; }
-    $('reflected-body').innerHTML = rows.map(function (r) {
+    $('reflected-body').innerHTML = pg.rows.map(function (r) {
       const id = escapeHtml(r.requestId);
       const sel = APP.selected.reflected.has(r.requestId);
       return '<tr' + rowStyle(r.status) + '>' +
@@ -1446,8 +1562,8 @@
   async function loadAdminSettings() {
     const d = await api('adminGetSettings');
     $('sheet-link').href = d.spreadsheetUrl;
-    $('admin-settings').innerHTML = '<table class="data-table"><thead><tr><th>キー</th><th>値</th><th>説明</th></tr></thead><tbody>' +
-      d.settings.map(function (s) { return '<tr><td class="mono small">' + escapeHtml(s.key) + '</td><td class="small" style="word-break:break-all;">' + escapeHtml(s.value) + '</td><td class="small muted">' + escapeHtml(s.description) + '</td></tr>'; }).join('') + '</tbody></table>';
+    $('admin-settings').innerHTML = '<table class="data-table settings-table"><thead><tr><th>キー</th><th>値</th><th>説明</th></tr></thead><tbody>' +
+      d.settings.map(function (s) { return '<tr><td class="mono small set-key">' + escapeHtml(s.key) + '</td><td class="small set-value">' + escapeHtml(s.value) + '</td><td class="small muted set-desc">' + escapeHtml(s.description) + '</td></tr>'; }).join('') + '</tbody></table>';
   }
 
   // -------------------------------------------------------------------------

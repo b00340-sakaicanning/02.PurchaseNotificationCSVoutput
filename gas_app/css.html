@@ -357,6 +357,22 @@
   .data-table tr.st-row:hover { background: color-mix(in srgb, var(--row-bg) 75%, #ffffff); }
   .data-table tr.selected-row { outline: 2px solid rgba(2, 132, 199, 0.35); outline-offset: -2px; }
   .cell-id { font-family: 'Outfit', monospace; font-weight: 700; white-space: nowrap; }
+  /* ページ送り（plan/05 §4.0） */
+  .pager { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.75rem; }
+  .pager-btn {
+    min-width: 34px; height: 30px; padding: 0 0.7rem; border: 1px solid var(--border); background: var(--bg-card); border-radius: var(--radius-full);
+    font-size: 0.8rem; font-weight: 600; color: var(--text-muted); cursor: pointer; font-family: inherit; transition: all 0.2s;
+  }
+  .pager-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+  .pager-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3); }
+  .pager-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pager-gap { color: var(--text-light); padding: 0 0.15rem; }
+  .pager-info { font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem; }
+  /* 設定一覧: 値と説明を折り返し、説明の列が画面に収まるようにする */
+  .settings-table td { vertical-align: top; }
+  .settings-table td.set-key { width: 220px; white-space: nowrap; }
+  .settings-table td.set-value { max-width: 360px; min-width: 160px; white-space: normal; word-break: break-all; }
+  .settings-table td.set-desc { min-width: 220px; white-space: normal; }
   .data-table td.cell-wrap { min-width: 160px; max-width: 260px; white-space: normal; }
   .cell-two { display: flex; flex-direction: column; gap: 0.1rem; }
   .cell-two .sub { font-family: monospace; font-size: 0.75rem; color: var(--text-muted); }

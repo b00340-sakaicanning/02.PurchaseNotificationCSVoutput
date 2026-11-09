@@ -514,6 +514,8 @@ function test_parseSettings() {
   assertEq_([s.PIN_SESSION_MINUTES, s.CSV_HEADER, s.CSV_DELIMITER], [45, false, '\t']);
   assertEq_(s.STATUS_COLORS['承認済'].bg, '#d1fae5', '壊れたJSONは既定値');
   assertEq_(s.QUANTITY_DECIMALS, 3);
+  assertEq_(s.LIST_PAGE_SIZE, 50, '一覧の件数の既定値');
+  assertEq_([parseSettings_({ LIST_PAGE_SIZE: '20' }).LIST_PAGE_SIZE, parseSettings_({ LIST_PAGE_SIZE: 'abc' }).LIST_PAGE_SIZE], [20, 50], '数値に変換し、壊れた値は既定値');
 }
 function test_parseRequiredFields() {
   const d = parseRequiredFields_([]);
