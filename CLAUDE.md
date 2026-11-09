@@ -27,13 +27,19 @@
 │   ├── Code.gs              # サーバー処理のすべて（13セクション【Api】〜【Menu】）
 │   ├── index.html / css.html / js.html  # 画面（include でつなぐ）
 │   ├── Tests.gs             # テストと開発用サンプルデータ（開発環境だけに貼る）
-│   └── appsscript.json      # マニフェスト
+│   ├── appsscript.json      # マニフェスト
+│   ├── manual.html          # 操作マニュアル（生成物。画像を内包。GAS に manual として貼る）
+│   ├── manual.template.html # 操作マニュアルの原本（本文と CSS）
+│   └── manual_images/       # 操作マニュアルの図（WebP）
 ├── tools/                   # ローカル検証用（Node.js。GAS には貼らない）
 │   ├── gas_fakes.js         # GAS サービスのフェイク
 │   ├── run_tests_node.js    # テスト実行
 │   ├── preview_mock.js      # local_preview.html の架空データ
 │   ├── build_local_preview.js  # local_preview.html の生成
-│   └── mobile_frame.html    # 幅375pxの確認用フレーム
+│   ├── mobile_frame.html    # 幅375pxの確認用フレーム
+│   ├── build_manual.js      # gas_app/manual.html の生成（図を埋め込む）
+│   ├── capture_manual_screenshots.js  # 操作マニュアルの図の撮影（local_preview.html を使う）
+│   └── browserDriver.js     # ヘッドレス Chrome の操作部品（撮影用）
 ├── local_preview.html       # 生成物（ブラウザで開くと本物の Code.gs がフェイク上で動く）
 ├── screenshot/              # 画面確認の採取物
 └── history/                 # 変更履歴
@@ -74,6 +80,8 @@
 ## よく使うコマンド
 - `node tools/run_tests_node.js` … Code.gs / Tests.gs をフェイク上でテスト（reference のマスタCSVも取り込む）。`--pure` で pure テストだけ
 - `node tools/build_local_preview.js` … local_preview.html を作り直す（画面を変えたら必ず実行する）
+- `node tools/capture_manual_screenshots.js` … 操作マニュアルの図を撮り直す（画面を変えたとき。1〜2分）
+- `node tools/build_manual.js` … 操作マニュアル（gas_app/manual.html）を作り直す
 
 
 ## アーキテクチャ方針

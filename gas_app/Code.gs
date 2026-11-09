@@ -4,7 +4,7 @@
  *
  * GAS エディタにこのファイルの中身を丸ごと貼り付けて使う（clasp は使わない）。
  * セクションの目次（エディタの検索で【名前】を探すと飛べる）
- *   【Api】            doGet / include / 画面から呼ぶ公開関数
+ *   【Api】            doGet（?page=manual で操作マニュアル）/ getAppUrl / include / 画面から呼ぶ公開関数
  *   【Config】         シート名・列定義・ステータス・設定の既定値
  *   【Utils】          エラー・日付・文字の正規化・キャッシュ
  *   【Repository】     シートの読み書き・ロック・採番・ログ・マスタのキャッシュ
@@ -28,11 +28,23 @@
 function doGet(e) {
   let title = '物品購入届';
   try { title = getSetting('APP_NAME') || title; } catch (err) { /* 初期セットアップ前 */ }
+  // URL に ?page=manual が付いていたら、操作マニュアル（HTML ファイル manual。画像を内包）を返す
+  if (e && e.parameter && e.parameter.page === 'manual') {
+    return HtmlService.createHtmlOutputFromFile('manual')
+      .setTitle(title + ' 操作マニュアル')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  }
   return HtmlService.createTemplateFromFile('index')
     .evaluate()
     .setTitle(title)
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** ウェブアプリの公開 URL（マニュアルを別タブで開くときに使う） */
+function getAppUrl() {
+  return ScriptApp.getService().getUrl();
 }
 
 function include(filename) {

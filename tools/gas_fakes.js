@@ -215,6 +215,7 @@
     Range.prototype.setNumberFormats = function (f) { const self = this; this._each(function (ri, ci, i, j) { self.s._setFmt(ri, ci, f[i][j]); }); return this; };
     Range.prototype.setNumberFormat = function (f) { const self = this; this._each(function (ri, ci) { self.s._setFmt(ri, ci, f); }); return this; };
     Range.prototype.setFontWeight = function () { return this; };
+    Range.prototype.insertCheckboxes = function () { return this; }; // 見た目だけの機能なので、フェイクでは何もしない
     Range.prototype.setBackground = function () { return this; };
 
     function Sheet(name, state) {

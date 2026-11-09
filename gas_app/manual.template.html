@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>物品購入届 操作マニュアル</title>
+  <!--
+    操作マニュアルの原本（plan/05 §10）。
+    - 画像は manual_images/ のファイルを参照する。node tools/build_manual.js が、画像を埋め込んだ manual.html（GAS へ貼るファイル）を生成する
+    - 画像は node tools/capture_manual_screenshots.js で撮影する。図の中の番号と、本文の番号（num-badge）を対応させること
+    - 画面上の文言（ボタン名・見出しなど）は ui-label クラスで囲み、実際の画面と同じ表記で書くこと
+    - 外部の CSS・JavaScript・フォントは読み込まない（GAS 上でも、印刷でも、そのまま表示できるようにするため）
+    - デザインは「01.エネルギー使用量集計」の操作マニュアルと同じ（色だけこのアプリの値）
+  -->
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-strong: #0369a1;
+      --primary-light: #e0f2fe;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --accent-red: #ef4444;
+      --accent-green: #10b981;
+      --sidebar-width: 310px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: var(--text);
+      background-color: var(--bg);
+      line-height: 1.7;
+      display: flex;
+    }
+
+    /* ----- 目次 (左に追従) ----- */
+    .sidebar {
+      width: var(--sidebar-width);
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      background: #ffffff;
+      border-right: 1px solid var(--border);
+      padding: 28px 20px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary-light);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+    }
+
+    .sidebar-nav li {
+      margin-bottom: 4px;
+    }
+
+    .sidebar-nav a {
+      display: block;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .sidebar-nav a:hover {
+      background-color: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .sidebar-nav .sub-item {
+      padding-left: 22px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .print-btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 10px 14px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .print-btn:hover {
+      opacity: 0.9;
+    }
+
+    /* ----- 本文 ----- */
+    .main-wrapper {
+      flex: 1;
+      min-width: 0;
+      padding: 40px 48px;
+      max-width: 1100px;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #075985 0%, #0284c7 100%);
+      color: #ffffff;
+      padding: 36px 40px;
+      border-radius: 12px;
+      margin-bottom: 36px;
+      box-shadow: 0 10px 25px -5px rgba(3, 105, 161, 0.25);
+    }
+
+    .header-banner h1 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 10px;
+    }
+
+    .header-banner p {
+      font-size: 0.95rem;
+      color: #f0f9ff;
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    .section {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      margin-bottom: 32px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      scroll-margin-top: 24px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      color: #0f172a;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.12rem;
+      color: #1e293b;
+      margin: 30px 0 14px 0;
+      padding-left: 10px;
+      border-left: 4px solid var(--primary);
+      scroll-margin-top: 24px;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+
+    /* 手順 (番号付き) と箇条書き */
+    .step-list,
+    .point-list {
+      padding-left: 26px;
+      margin-bottom: 18px;
+      font-size: 0.95rem;
+      color: #334155;
+    }
+
+    .step-list li,
+    .point-list li {
+      margin-bottom: 9px;
+    }
+
+    /* 画面上の文言 (ボタン名・見出しなど) */
+    .ui-label {
+      display: inline-block;
+      padding: 0 7px;
+      margin: 0 2px;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      border-radius: 5px;
+      font-weight: 600;
+      font-size: 0.9em;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+
+    /* ----- 図 ----- */
+    .figure-box {
+      margin: 22px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f8fafc;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    }
+
+    .figure-box img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .figure-caption {
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      font-weight: 500;
+      text-align: center;
+    }
+
+    /* ----- 注意書き ----- */
+    .alert-box {
+      padding: 16px 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .alert-important {
+      background-color: #fff1f2;
+      border-left: 4px solid var(--accent-red);
+      color: #9f1239;
+    }
+
+    .alert-tip {
+      background-color: #ecfdf5;
+      border-left: 4px solid var(--accent-green);
+      color: #065f46;
+    }
+
+    .alert-note {
+      background-color: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      color: #075985;
+    }
+
+    .alert-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* ----- 表 ----- */
+    .table-container {
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      color: #475569;
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .col-num {
+      width: 70px;
+      text-align: center;
+    }
+
+    .col-name {
+      width: 230px;
+    }
+
+    td.col-num {
+      text-align: center;
+    }
+
+    /* 図の中の番号に対応するバッジ */
+    .num-badge {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      background: #dc2626;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-align: center;
+      line-height: 22px;
+      border-radius: 50%;
+      margin: 0 3px;
+    }
+
+    /* ----- FAQ ----- */
+    .faq-item {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .faq-q {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .faq-q::before {
+      content: "Q.";
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    .faq-a {
+      font-size: 0.92rem;
+      color: #334155;
+      padding-left: 28px;
+      line-height: 1.7;
+    }
+
+    /* ----- 印刷 (A4) ----- */
+    @media print {
+      body {
+        background: #ffffff;
+        display: block;
+      }
+
+      .sidebar {
+        display: none !important;
+      }
+
+      .main-wrapper {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .header-banner {
+        background: #0369a1 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: none;
+      }
+
+      .section {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 10px 0 !important;
+        margin-bottom: 20px !important;
+      }
+
+      h2,
+      h3 {
+        page-break-after: avoid;
+      }
+
+      .figure-box,
+      .alert-box,
+      .faq-item,
+      tr {
+        page-break-inside: avoid;
+      }
+
+      .figure-box {
+        box-shadow: none !important;
+        border: 1px solid #cccccc !important;
+      }
+
+      .figure-box img {
+        max-height: 520px;
+        object-fit: contain;
+      }
+
+      .num-badge,
+      .ui-label,
+      .alert-box,
+      th {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+
+    /* ----- 狭い画面 ----- */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .main-wrapper {
+        padding: 24px 16px;
+      }
+
+      .section {
+        padding: 22px 18px;
+      }
+
+      .header-banner {
+        padding: 26px 22px;
+      }
+
+      /* 表の「名称」列の幅を固定しない（説明の列が細くなりすぎないようにする） */
+      .col-name {
+        width: auto;
+        min-width: 5.5em;
+      }
+
+      .col-num {
+        width: 44px;
+      }
+
+      th,
+      td {
+        padding: 9px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 目次 -->
+  <aside class="sidebar">
+    <div class="sidebar-title">📖 目次</div>
+    <ul class="sidebar-nav">
+      <li><a href="#section-1">1. システム概要と画面構成</a></li>
+      <li><a href="#section-1-1" class="sub-item">1.1 画面の上部</a></li>
+      <li><a href="#section-1-2" class="sub-item">1.2 届出の流れとステータス</a></li>
+      <li><a href="#section-1-3" class="sub-item">1.3 役割とできること</a></li>
+      <li><a href="#section-2">2. 使い始める前に（操作者と暗証番号）</a></li>
+      <li><a href="#section-2-1" class="sub-item">2.1 操作者を選ぶ</a></li>
+      <li><a href="#section-2-2" class="sub-item">2.2 暗証番号の入力</a></li>
+      <li><a href="#section-3">3. 新規入力</a></li>
+      <li><a href="#section-3-1" class="sub-item">3.1 基本情報と発注先・納入先</a></li>
+      <li><a href="#section-3-2" class="sub-item">3.2 購入する物品と添付</a></li>
+      <li><a href="#section-3-3" class="sub-item">3.3 保存と承認依頼</a></li>
+      <li><a href="#section-4">4. 入力データ一覧</a></li>
+      <li><a href="#section-4-1" class="sub-item">4.1 画面の見方</a></li>
+      <li><a href="#section-4-2" class="sub-item">4.2 詳細と修正</a></li>
+      <li><a href="#section-5">5. 承認者の操作</a></li>
+      <li><a href="#section-5-1" class="sub-item">5.1 承認する</a></li>
+      <li><a href="#section-5-2" class="sub-item">5.2 差し戻す</a></li>
+      <li><a href="#section-5-3" class="sub-item">5.3 承認を取り消す</a></li>
+      <li><a href="#section-6">6. 承認済一覧（経理・管理者）</a></li>
+      <li><a href="#section-6-1" class="sub-item">6.1 画面の見方</a></li>
+      <li><a href="#section-6-2" class="sub-item">6.2 資材コードの確定</a></li>
+      <li><a href="#section-6-3" class="sub-item">6.3 取引先コードの補完</a></li>
+      <li><a href="#section-6-4" class="sub-item">6.4 CSV出力と反映済にする</a></li>
+      <li><a href="#section-7">7. システム反映済一覧</a></li>
+      <li><a href="#section-8">8. 管理者編</a></li>
+      <li><a href="#section-8-1" class="sub-item">8.1 マスタ取込</a></li>
+      <li><a href="#section-8-2" class="sub-item">8.2 暗証番号の発行</a></li>
+      <li><a href="#section-8-3" class="sub-item">8.3 設定の閲覧</a></li>
+      <li><a href="#section-8-4" class="sub-item">8.4 スプレッドシートで変えること</a></li>
+      <li><a href="#section-9">9. 付録・FAQ</a></li>
+      <li><a href="#section-9-1" class="sub-item">9.1 用語</a></li>
+      <li><a href="#section-9-2" class="sub-item">9.2 よくある質問</a></li>
+    </ul>
+
+    <button class="print-btn" onclick="window.print()">🖨️ マニュアルを印刷 / PDF出力</button>
+  </aside>
+
+  <main class="main-wrapper">
+
+    <header class="header-banner">
+      <h1>物品購入届 操作マニュアル</h1>
+      <p>物品購入届をウェブ画面で入力・承認し、承認済みの届出から販売管理システムへ取り込む CSV を出力するための手引きです。実際の画面と、図の中の番号（<span class="num-badge">1</span><span class="num-badge">2</span><span class="num-badge">3</span>…）に沿って操作を説明します。</p>
+    </header>
+
+    <!-- ================= 1. システム概要と画面構成 ================= -->
+    <section id="section-1" class="section">
+      <h2>1. システム概要と画面構成</h2>
+      <p>このシステムでは、紙で回していた物品購入届を、画面で入力して承認者に回せます。承認された届出は、経理担当が資材コードなどを確かめてから CSV に出力し、販売管理システムへ取り込みます。</p>
+      <p>ログインはありません。画面の右上で「操作者」（自分）を選んで使います。承認者・管理者・経理の人を選ぶときは、暗証番号を入力します（<a href="#section-2">2章</a>）。</p>
+
+      <h3 id="section-1-1">1.1 画面の上部</h3>
+      <div class="figure-box">
+        <img src="manual_images/01_overview.webp" alt="画面の上部">
+        <div class="figure-caption">【図1-1】画面の上部（承認者を選び、認証した状態）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>タイトル</strong></td><td>システムの名前です。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><span class="ui-label">マニュアル</span></td><td>このマニュアルを別のタブで開きます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>操作者</strong></td><td>画面を使う人を選びます。名前の後ろの <span class="ui-label">[承認者]</span> などは、その人の権限です（<a href="#section-2-1">2.1</a>）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>認証状態</strong></td><td>暗証番号で認証している間は <span class="ui-label">認証中（残りN分）</span> と出ます。<span class="ui-label">解除</span> で認証をやめます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><strong>タブ</strong></td><td><span class="ui-label">新規入力</span> <span class="ui-label">入力データ一覧</span> <span class="ui-label">承認済一覧</span> <span class="ui-label">システム反映済一覧</span> を切り替えます。管理者を選んだときだけ、<span class="ui-label">マスタ管理</span> も出ます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-1-2">1.2 届出の流れとステータス</h3>
+      <p>届出は、次のステータスの順に進みます。一覧では、行の色でステータスが分かります。</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-name">ステータス</th><th>意味</th><th>次に進める操作</th></tr></thead>
+          <tbody>
+            <tr><td><strong>一時保存</strong></td><td>入力の途中です。必須の項目が空でも保存できます。</td><td>入力者が <span class="ui-label">入力完了</span> または <span class="ui-label">承認依頼</span></td></tr>
+            <tr><td><strong>入力完了</strong></td><td>入力を終え、承認依頼の前の状態です。</td><td>入力者が <span class="ui-label">承認依頼</span></td></tr>
+            <tr><td><strong>承認依頼中</strong></td><td>承認者の承認を待っています。</td><td>承認者が <span class="ui-label">承認</span> または <span class="ui-label">差し戻し</span></td></tr>
+            <tr><td><strong>差し戻し</strong></td><td>承認者から差し戻されました。理由が表示されます。</td><td>入力者が直して、もう一度 <span class="ui-label">承認依頼</span></td></tr>
+            <tr><td><strong>承認済</strong></td><td>承認されました。CSV の出力を待っています。</td><td>経理担当が CSV を出力し、<span class="ui-label">反映済にする</span></td></tr>
+            <tr><td><strong>システム反映済</strong></td><td>販売管理システムへの取り込みが終わりました。</td><td>（閲覧のみ。管理者は承認済に戻せます）</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-1-3">1.3 役割とできること</h3>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-name">役割</th><th>できること</th><th>暗証番号</th></tr></thead>
+          <tbody>
+            <tr><td><strong>入力者</strong>（全員）</td><td>届出の入力・保存・承認依頼、自分の届出の修正・削除・承認依頼の取消</td><td>不要</td></tr>
+            <tr><td><strong>承認者</strong></td><td>自分が承認者に指定された届出の承認・差し戻し・承認の取消</td><td>必要</td></tr>
+            <tr><td><strong>経理</strong></td><td>資材コードの確定、取引先コードの補完、CSV出力、反映済にする</td><td>必要</td></tr>
+            <tr><td><strong>管理者</strong></td><td>経理の操作に加えて、承認済に戻す、マスタ管理（取込・暗証番号の発行・設定の閲覧）</td><td>必要</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-box alert-note">
+        <div class="alert-title">承認者になる人</div>
+        承認者は、届出を入力するときに選びます。選べるのは、その部門の承認者として登録されている人だけです。自分の届出を自分で承認することはできません。
+      </div>
+    </section>
+
+    <!-- ================= 2. 使い始める前に ================= -->
+    <section id="section-2" class="section">
+      <h2>2. 使い始める前に（操作者と暗証番号）</h2>
+
+      <h3 id="section-2-1">2.1 操作者を選ぶ</h3>
+      <p>画面の右上の <span class="ui-label">操作者</span> で、自分の名前を選びます。選んだ人は記憶され、次に開いたときも選ばれた状態になります。</p>
+      <div class="figure-box">
+        <img src="manual_images/02_operator_list.webp" alt="操作者の一覧">
+        <div class="figure-caption">【図2-1】操作者の一覧（説明のため、一覧を開いた状態で表示しています）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>操作者の一覧</strong></td><td>部ごとにまとまっています。権限を持つ人には、名前と課の後ろに <span class="ui-label">[管理者]</span> <span class="ui-label">[経理]</span> <span class="ui-label">[承認者]</span> が付きます。複数の権限を持つ人は <span class="ui-label">[管理者・承認者]</span> のように並びます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-2-2">2.2 暗証番号の入力</h3>
+      <p>権限を持つ人（承認者・管理者・経理）を選ぶと、切り替わる前に暗証番号を聞かれます。</p>
+      <div class="figure-box">
+        <img src="manual_images/03_pin_dialog.webp" alt="暗証番号の入力">
+        <div class="figure-caption">【図2-2】承認者を選んだときの暗証番号の入力</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>認証する人</strong></td><td>選ぼうとしている人の名前です。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>暗証番号</strong></td><td>数字6桁の暗証番号を入力します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><span class="ui-label">キャンセル</span> <span class="ui-label">認証する</span></td><td>正しい番号で <span class="ui-label">認証する</span> を押すと、操作者が切り替わります。<span class="ui-label">キャンセル</span> を押すと、元の操作者に戻ります。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="point-list">
+        <li>認証は30分有効です。時間が切れても操作者は選ばれたままで、承認などの操作をするときに、もう一度暗証番号を聞かれます。</li>
+        <li>新しいタブで開いたときも、前回の操作者が権限を持つ人なら暗証番号を聞かれます。キャンセルすると、操作者は未選択になります。</li>
+        <li>権限を持つ人が <span class="ui-label">解除</span> を押すと、操作者も未選択に戻ります。</li>
+        <li>入力だけの人を選ぶときは、暗証番号は要りません。</li>
+      </ul>
+      <div class="alert-box alert-important">
+        <div class="alert-title">暗証番号を続けて間違えたとき</div>
+        5回続けて間違えると、15分間ロックされ、正しい番号でも認証できなくなります。時間をおいてから入力するか、管理者に暗証番号を発行し直してもらってください（<a href="#section-8-2">8.2</a>）。
+      </div>
+    </section>
+
+    <!-- ================= 3. 新規入力 ================= -->
+    <section id="section-3" class="section">
+      <h2>3. 新規入力</h2>
+      <p><span class="ui-label">新規入力</span> タブで、物品購入届を入力します。1つの届出には、1つの物品を入力します。</p>
+      <p>項目名の横の <span class="ui-label">必須</span> の項目は、入力完了・承認依頼のときに必要です。<span class="ui-label">任意</span> の項目は空でもかまいません。どの項目を必須にするかは、管理者が決めます（<a href="#section-8-4">8.4</a>）。</p>
+
+      <h3 id="section-3-1">3.1 基本情報と発注先・納入先</h3>
+      <div class="figure-box">
+        <img src="manual_images/04_new_top.webp" alt="新規入力の上部">
+        <div class="figure-caption">【図3-1】新規入力の上部（発注先を検索している状態）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>部門</strong></td><td>初めは、操作者の所属の部門が入っています。部門を変えると、承認者の候補も変わります。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>種別</strong></td><td>物品の種別を選びます。資材コードの候補を選ぶときに使います。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>承認者</strong></td><td>その部門の承認者から選びます。候補がいないときは承認依頼ができないので、管理者に連絡してください。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>発注先</strong></td><td><span class="ui-label">マスタから選ぶ</span> は、名称・カナ・略称・コードで検索して選びます。マスタに無いときは <span class="ui-label">手入力</span> で名称を入力し、決まっていないときは <span class="ui-label">指定なし</span> を選びます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><strong>納入先</strong></td><td>発注先と同じように選びます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-box alert-tip">
+        <div class="alert-title">手入力・指定なしにしたとき</div>
+        CSV の発注先コード（納入先コード）は空になります。経理担当が、承認済一覧の <span class="ui-label">コード</span> で後から補完できます（<a href="#section-6-3">6.3</a>）。
+      </div>
+
+      <h3 id="section-3-2">3.2 購入する物品と添付</h3>
+      <div class="figure-box">
+        <img src="manual_images/05_new_bottom.webp" alt="新規入力の下部">
+        <div class="figure-caption">【図3-2】新規入力の下部</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>購入物品名・型番</strong></td><td>物品の名前（100文字まで）と型番を入力します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>数量・単位補足・納品日</strong></td><td>数量は0より大きい数を入力します（小数は3桁まで。全角でも入力できます）。納品日が空のときは、CSV の納期は提出日の月末になります。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>理由</strong></td><td>購入する理由を入力します（500文字まで）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>添付1・添付2</strong></td><td>見積書などと納品書を添付できます。<span class="ui-label">ファイルを選ぶ</span> でファイルを選ぶと、保存のときにアップロードされます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><strong>ボタン</strong></td><td>保存のボタンです（<a href="#section-3-3">3.3</a>）。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-3-3">3.3 保存と承認依頼</h3>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-name">ボタン</th><th>動き</th></tr></thead>
+          <tbody>
+            <tr><td><span class="ui-label">一時保存</span></td><td>入力の途中で保存します。必須の項目が空でも保存できます。</td></tr>
+            <tr><td><span class="ui-label">入力完了</span></td><td>必須の項目を確かめて保存します。まだ承認者には回りません。</td></tr>
+            <tr><td><span class="ui-label">承認依頼</span></td><td>必須の項目を確かめて、承認者に回します。この日が提出日になります。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="step-list">
+        <li>項目を入力します。</li>
+        <li><span class="ui-label">承認依頼</span> を押し、確認の画面で <span class="ui-label">承認依頼する</span> を押します。</li>
+        <li>入力に足りないところがあると、その項目の下に赤い文字で理由が出ます。直してから、もう一度押します。</li>
+      </ol>
+    </section>
+
+    <!-- ================= 4. 入力データ一覧 ================= -->
+    <section id="section-4" class="section">
+      <h2>4. 入力データ一覧</h2>
+      <p>すべての届出（削除したものを除く）を一覧で表示します。行の色と左端の色の帯は、ステータスを表します。</p>
+
+      <h3 id="section-4-1">4.1 画面の見方</h3>
+      <div class="figure-box">
+        <img src="manual_images/06_list.webp" alt="入力データ一覧">
+        <div class="figure-caption">【図4-1】入力データ一覧（承認者で表示した状態）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>件数・再読み込み</strong></td><td>該当する件数と、表示している範囲です。<span class="ui-label">再読み込み</span> で最新の内容を読み直します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>クイック・ステータス</strong></td><td><span class="ui-label">自分の届出</span> <span class="ui-label">自分が承認する承認依頼中</span> で、よく使う絞り込みができます。ステータスのボタンは、押したステータスだけを表示します（複数選べます）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>絞り込み</strong></td><td>購入物品名・部門・種別・入力者・承認者・発注先・提出日で絞り込みます。<span class="ui-label">リセット</span> で元に戻します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>見出し</strong></td><td>見出しの名前を押すと、その項目で並び替えます（もう一度押すと逆順）。「部門／種別」のような見出しは、それぞれの名前を押せます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><strong>操作</strong></td><td>その届出でできる操作のボタンだけが出ます（<span class="ui-label">詳細</span> は常に出ます）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">6</span></td><td><strong>ページ送り</strong></td><td>件数が多いときは、ページに分けて表示します。番号や <span class="ui-label">次へ »</span> で移ります。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="point-list">
+        <li>スクロールしても、画面の上の部分と表の見出しは動きません。表の中だけがスクロールします。</li>
+        <li>画面が狭くて横にスクロールするときも、左の「届出ID／ステータス」と右の「操作」の列は固定されます。</li>
+      </ul>
+
+      <h3 id="section-4-2">4.2 詳細と修正</h3>
+      <div class="figure-box">
+        <img src="manual_images/07_detail.webp" alt="届出の詳細">
+        <div class="figure-caption">【図4-2】届出の詳細</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>内容</strong></td><td>届出の内容、添付、操作の履歴を表示します。添付はここから表示・ダウンロードできます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><span class="ui-label">修正する</span> <span class="ui-label">閉じる</span></td><td>修正できる届出なら、<span class="ui-label">修正する</span> で新規入力タブを修正の状態で開きます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="point-list">
+        <li>入力者は、一時保存・入力完了・差し戻しの届出を修正できます。承認依頼中の届出は、承認依頼を取り消してから直すこともできます（<span class="ui-label">承認依頼取消</span>）。</li>
+        <li>一時保存・入力完了の届出は、<span class="ui-label">削除</span> できます。</li>
+        <li>承認依頼中・承認済の届出では、部門と承認者は変えられません。</li>
+      </ul>
+    </section>
+
+    <!-- ================= 5. 承認者の操作 ================= -->
+    <section id="section-5" class="section">
+      <h2>5. 承認者の操作</h2>
+      <p>自分が承認者に指定された届出は、入力データ一覧の <span class="ui-label">自分が承認する承認依頼中</span> で絞り込めます。</p>
+
+      <h3 id="section-5-1">5.1 承認する</h3>
+      <ol class="step-list">
+        <li>入力データ一覧で、承認する届出の <span class="ui-label">詳細</span> を押して内容を確かめます。</li>
+        <li>行の <span class="ui-label">承認</span> を押し、確認の画面で承認します。</li>
+        <li>承認すると、ステータスが「承認済」になり、システムが資材コードの候補を選びます。</li>
+      </ol>
+
+      <h3 id="section-5-2">5.2 差し戻す</h3>
+      <div class="figure-box">
+        <img src="manual_images/08_reject.webp" alt="差し戻し">
+        <div class="figure-caption">【図5-1】差し戻しの理由の入力</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>差し戻し理由</strong></td><td>直してほしいことを入力します（必須。500文字まで）。入力者の画面に表示されます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>ボタン</strong></td><td>差し戻すと、ステータスが「差し戻し」になります。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-5-3">5.3 承認を取り消す</h3>
+      <p>承認済の届出を、承認依頼中に戻します。届出の <span class="ui-label">修正</span> で開いた画面の <span class="ui-label">承認取消</span> を押します（承認者と管理者）。CSV を出力済みだった場合は、その印も外れます。</p>
+    </section>
+
+    <!-- ================= 6. 承認済一覧 ================= -->
+    <section id="section-6" class="section">
+      <h2>6. 承認済一覧（経理・管理者）</h2>
+      <p>承認された届出の一覧です。経理担当・管理者は、資材コードと取引先コードを確かめてから CSV を出力します。他の人は閲覧だけできます。</p>
+
+      <h3 id="section-6-1">6.1 画面の見方</h3>
+      <div class="figure-box">
+        <img src="manual_images/09_approved.webp" alt="承認済一覧">
+        <div class="figure-caption">【図6-1】承認済一覧（経理で表示した状態）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>絞り込み</strong></td><td>部門・発注先・提出日・CSV出力の済／未で絞り込みます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>選択中の件数</strong></td><td>左端のチェックで選んだ件数です。ページをまたいで選んだ件数も合計されます。見出しのチェックは、今のページの行をまとめて選びます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><span class="ui-label">CSV出力</span> <span class="ui-label">反映済にする</span></td><td>選んだ届出を CSV に出力します。取り込みが終わったら、反映済にします（<a href="#section-6-4">6.4</a>）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>資材コード／入数</strong></td><td>確定していないときは、システムが選んだ候補と <span class="ui-label">資材未確定</span> が出ます。発注先・納入先のコードが無いときは <span class="ui-label">コード未設定</span> が出ます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><span class="ui-label">資材</span> <span class="ui-label">コード</span> <span class="ui-label">詳細</span></td><td>資材コードの確定（<a href="#section-6-2">6.2</a>）と、取引先コードの補完（<a href="#section-6-3">6.3</a>）を行います。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-6-2">6.2 資材コードの確定</h3>
+      <div class="figure-box">
+        <img src="manual_images/10_material.webp" alt="資材コードの確定">
+        <div class="figure-caption">【図6-2】資材コードの確定</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>対象の届出</strong></td><td>購入物品名・種別・部門・発注先です。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>候補</strong></td><td>システムが選んだ資材です。順位が小さいほど、届出の内容に近いものです。<span class="ui-label">候補を再計算</span> で選び直せます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>資材マスタを検索</strong></td><td>候補に無いときは、資材名・コード・種別・部門で検索して選びます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>資材なしで確定</strong></td><td>当てはまる資材が無いときに選びます。CSV の資材コード・入数は空になります。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><span class="ui-label">確定する</span></td><td>選んだ資材で確定します。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-6-3">6.3 取引先コードの補完</h3>
+      <div class="figure-box">
+        <img src="manual_images/11_code.webp" alt="取引先コードの補完">
+        <div class="figure-caption">【図6-3】発注先・納入先コードの補完</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>発注先コード</strong></td><td>入力時の発注先と今のコードを確かめ、取引先を検索して選びます。発注先マスタで非表示の取引先も検索できます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>納入先コード</strong></td><td>納入先マスタから選びます。変えないときは <span class="ui-label">（変更しない）</span> のままにします。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-6-4">6.4 CSV出力と反映済にする</h3>
+      <div class="figure-box">
+        <img src="manual_images/12_csv_confirm.webp" alt="CSV出力の確認">
+        <div class="figure-caption">【図6-4】CSV出力の確認</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>確認の内容</strong></td><td>出力する件数と、コード未設定・資材未確定の件数です。該当する列は空で出力されます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><span class="ui-label">出力する</span></td><td>CSV（Shift_JIS）をダウンロードします。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ol class="step-list">
+        <li>承認済一覧で、出力する届出のチェックを入れます。</li>
+        <li><span class="ui-label">CSV出力</span> を押し、確認の画面で <span class="ui-label">出力する</span> を押します。</li>
+        <li>ダウンロードした CSV を、販売管理システムに取り込みます。</li>
+        <li>取り込みが終わったら、同じ届出を選んで <span class="ui-label">反映済にする</span> を押します。ステータスが「システム反映済」になります。</li>
+      </ol>
+      <div class="alert-box alert-important">
+        <div class="alert-title">反映済にできるのは、CSV を出力した届出だけです</div>
+        出力した後に届出を修正すると、CSV出力の列に <span class="ui-label">要再出力</span> が出ます。もう一度出力してから取り込んでください。
+      </div>
+    </section>
+
+    <!-- ================= 7. システム反映済一覧 ================= -->
+    <section id="section-7" class="section">
+      <h2>7. システム反映済一覧</h2>
+      <p>販売管理システムへ取り込み済みの届出です。閲覧だけできます。</p>
+      <div class="figure-box">
+        <img src="manual_images/13_reflected.webp" alt="システム反映済一覧">
+        <div class="figure-caption">【図7-1】システム反映済一覧（管理者で表示した状態）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><span class="ui-label">CSV再出力</span></td><td>選んだ届出の CSV をもう一度出力します（経理・管理者）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><span class="ui-label">承認済に戻す</span></td><td>取り込みをやり直すときなどに、承認済に戻します（管理者のみ）。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 8. 管理者編 ================= -->
+    <section id="section-8" class="section">
+      <h2>8. 管理者編</h2>
+      <p>管理者を操作者に選ぶと、<span class="ui-label">マスタ管理</span> タブが出ます。</p>
+
+      <h3 id="section-8-1">8.1 マスタ取込</h3>
+      <div class="figure-box">
+        <img src="manual_images/14_admin_import.webp" alt="マスタ取込">
+        <div class="figure-caption">【図8-1】マスタ取込</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>メニュー</strong></td><td><span class="ui-label">マスタ取込</span> <span class="ui-label">暗証番号の発行</span> <span class="ui-label">設定の閲覧</span> を切り替えます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>取込のボタン</strong></td><td>Google ドライブの「マスタ取込」フォルダに置いた CSV（販売管理システムの資材マスター・取引先マスター、Microsoft 365 の社員一覧）を取り込みます。結果（件数・追加・更新・無効化）が下に出ます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-8-2">8.2 暗証番号の発行</h3>
+      <div class="figure-box">
+        <img src="manual_images/15_admin_pin.webp" alt="暗証番号の発行">
+        <div class="figure-caption">【図8-2】暗証番号の発行（番号を指定する場合）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><strong>設定のしかた</strong></td><td><span class="ui-label">ランダムに発行</span> は、システムが番号を決めて1回だけ表示します。<span class="ui-label">番号を指定する</span> は、管理者が番号を決めます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>社員</strong></td><td>暗証番号を設定する人を選びます。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">3</span></td><td><strong>暗証番号</strong></td><td>数字6桁で入力します（番号を指定するときだけ）。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">4</span></td><td><strong>暗証番号（確認）</strong></td><td>同じ番号をもう一度入力します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">5</span></td><td><span class="ui-label">設定する</span></td><td>暗証番号を設定します。以前の番号は使えなくなり、ロックも解除されます。</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-box alert-note">
+        <div class="alert-title">暗証番号の扱い</div>
+        暗証番号は、本人に直接伝えてください。設定した番号は、画面にも操作ログにも残りません。スプレッドシートのメニュー「物品購入届」→「暗証番号を発行」からも設定できます。
+      </div>
+
+      <h3 id="section-8-3">8.3 設定の閲覧</h3>
+      <div class="figure-box">
+        <img src="manual_images/16_admin_settings.webp" alt="設定の閲覧">
+        <div class="figure-caption">【図8-3】設定の閲覧（先頭の部分）</div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-num">番号</th><th class="col-name">名称</th><th>説明</th></tr></thead>
+          <tbody>
+            <tr><td class="col-num"><span class="num-badge">1</span></td><td><span class="ui-label">スプレッドシートを開く</span></td><td>データのスプレッドシートを開きます。設定やマスタは、スプレッドシートで直接編集します。</td></tr>
+            <tr><td class="col-num"><span class="num-badge">2</span></td><td><strong>設定の一覧</strong></td><td>「設定」シートのキー・値・説明です（閲覧のみ）。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-8-4">8.4 スプレッドシートで変えること</h3>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-name">変えたいこと</th><th>変える場所</th><th>反映のしかた</th></tr></thead>
+          <tbody>
+            <tr><td>入力の必須・任意</td><td>「入力項目」シートの「必須」列のチェック（部門・承認者は常に必須）</td><td>画面を再読み込み</td></tr>
+            <tr><td>一覧の1ページの件数</td><td>「設定」シートの <code>LIST_PAGE_SIZE</code>（0 なら全件）</td><td>画面を再読み込み</td></tr>
+            <tr><td>暗証番号の桁数・有効時間・ロック</td><td>「設定」シートの <code>PIN_LENGTH</code>・<code>PIN_SESSION_MINUTES</code>・<code>PIN_MAX_FAILS</code>・<code>PIN_LOCK_MINUTES</code></td><td>画面を再読み込み</td></tr>
+            <tr><td>CSV の列・書式</td><td>「設定」シートの <code>CSV_</code> で始まるキー</td><td>次の出力から</td></tr>
+            <tr><td>添付の形式・大きさ</td><td>「設定」シートの <code>ATTACHMENT_ALLOWED_EXT</code>・<code>ATTACHMENT_MAX_MB</code></td><td>画面を再読み込み</td></tr>
+            <tr><td>承認者・権限（管理者・経理）</td><td>「承認者対応表」「権限マスタ」シート</td><td>メニュー「キャッシュをクリア」の後、画面を再読み込み</td></tr>
+            <tr><td>部署・種別・納入先の有効／無効</td><td>「部署マスタ」「種別マスタ」「納入先マスタ」の「有効」列</td><td>メニュー「キャッシュをクリア」の後、画面を再読み込み</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="alert-box alert-important">
+        <div class="alert-title">「暗証番号」シートは編集しないでください</div>
+        暗証番号はハッシュ化して保存しています。シートは保護して隠してあります。
+      </div>
+    </section>
+
+    <!-- ================= 9. 付録・FAQ ================= -->
+    <section id="section-9" class="section">
+      <h2>9. 付録・FAQ</h2>
+
+      <h3 id="section-9-1">9.1 用語</h3>
+      <div class="table-container">
+        <table>
+          <thead><tr><th class="col-name">用語</th><th>意味</th></tr></thead>
+          <tbody>
+            <tr><td><strong>操作者</strong></td><td>画面を使っている人。画面の右上で選びます。</td></tr>
+            <tr><td><strong>届出ID</strong></td><td>届出の番号。「PR-年月日-連番」の形です。</td></tr>
+            <tr><td><strong>提出日</strong></td><td>承認依頼をした日。納品日が空のときは、この日の月末が CSV の納期になります。</td></tr>
+            <tr><td><strong>資材コード</strong></td><td>販売管理システムの資材の番号。CSV に出力します。</td></tr>
+            <tr><td><strong>反映済</strong></td><td>CSV を販売管理システムに取り込み終わった状態。</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 id="section-9-2">9.2 よくある質問</h3>
+      <div class="faq-item">
+        <div class="faq-q">暗証番号を忘れました。</div>
+        <div class="faq-a">管理者に、暗証番号を発行し直してもらってください（<a href="#section-8-2">8.2</a>）。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">「承認」などのボタンが出ません。</div>
+        <div class="faq-a">ボタンは、その届出でできる操作だけが出ます。承認者に指定されていない届出や、ステータスが違う届出では出ません。操作者が自分になっているかも確かめてください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">承認者の候補に、承認してほしい人が出ません。</div>
+        <div class="faq-a">選んだ部門の承認者として登録されていません。管理者に「承認者対応表」への登録を依頼してください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">「他の人が先に更新しました」と出ます。</div>
+        <div class="faq-a">同じ届出を、別の人が先に保存しました。画面を再読み込みしてから、もう一度操作してください。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">CSV を開くと文字化けします。</div>
+        <div class="faq-a">CSV は Shift_JIS です。Excel で開くか、販売管理システムにそのまま取り込んでください。テキストエディタでは、文字コードに Shift_JIS を指定して開きます。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">マスタ管理のタブが出ません。</div>
+        <div class="faq-a">管理者を操作者に選んだときだけ出ます。「権限マスタ」シートで役割が「管理者」になっているか、管理者に確かめてください。</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // 目次のリンクで、ページ内の見出しへ移動する (GAS の画面の中でも確実に移動できるよう、リンク先への移動をここで行う)
+    document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+      link.addEventListener('click', function (event) {
+        var target = document.getElementById(link.getAttribute('href').slice(1));
+        if (!target) return;
+        event.preventDefault();
+        target.scrollIntoView();
+      });
+    });
+  </script>
+
+</body>
+</html>

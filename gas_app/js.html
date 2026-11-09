@@ -288,6 +288,21 @@
     showToast('認証を解除しました', 'info');
   }
 
+  // 操作マニュアル（別タブ。GAS では ?page=manual、ローカルでは gas_app/manual.html。plan/05 §10）
+  function openManualWindow(event) {
+    if (event) event.preventDefault();
+    if (window.location.protocol === 'file:' || /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) {
+      window.open('gas_app/manual.html', '_blank');
+      return;
+    }
+    const openWith = function (baseUrl) {
+      const url = String(baseUrl || window.location.href).split('#')[0];
+      const base = url.replace(/([?&])page=manual(&|$)/, '$1').replace(/[?&]$/, '');
+      window.open(base + (base.indexOf('?') >= 0 ? '&' : '?') + 'page=manual', '_blank');
+    };
+    google.script.run.withSuccessHandler(openWith).withFailureHandler(function () { openWith(null); }).getAppUrl();
+  }
+
   // 暗証番号ダイアログ（plan/05 §2）
   let pinResolver = null;
   function setupPinModal() {
